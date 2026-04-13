@@ -1,0 +1,152 @@
+transcript_research_task:
+  description: >
+    Analyze the following YouTube livestream transcript and extract ALL concrete
+    technical details. Organize your notes by topic area with clear headings.
+
+    Focus areas: {focus}
+
+    For each topic, capture:
+    - Specific product/service names and versions
+    - API calls, function signatures, contract addresses
+    - Architecture decisions and design patterns
+    - Protocols, standards, and specifications
+    - Demo steps and code examples shown
+    - Metrics, benchmarks, and performance data
+    - Timelines, roadmap items, and announcements
+    - Speaker names and their roles
+
+    TRANSCRIPT:
+    {transcript_text}
+  expected_output: >
+    Organized technical notes with clear topic headings, covering every concrete
+    detail from the transcript. Each note should be specific enough for a technical
+    writer to turn into a blog paragraph. Include speaker attributions where relevant.
+  agent: transcript_researcher
+
+docs_research_task:
+  description: >
+    Using the transcript research notes from the previous task, search the official
+    Hedera documentation for supporting context that adds depth and accuracy.
+
+    Use the "Query Hedera Documentation" tool to search for:
+    1. Official documentation for any Hedera services mentioned (HTS, HCS, Smart Contracts)
+    2. SDK references for any APIs or functions discussed
+    3. Architecture documentation for any design patterns described
+    4. Any official blog posts or learning content related to the topics
+
+    Combine the documentation excerpts with the transcript notes to create an
+    enriched set of notes that a writer can use.
+  expected_output: >
+    An enriched notes document that combines the original transcript notes with
+    relevant official Hedera documentation excerpts. Each documentation addition
+    should be clearly labeled with its source. Do not remove any transcript notes -
+    only add supporting documentation context.
+  agent: docs_researcher
+
+writing_task:
+  description: >
+    Write a publish-ready technical blog post for Medium based on the enriched notes.
+
+    Target audience: {audience}
+    Focus areas: {focus}
+    Reference links to include: {reference_links}
+
+    REQUIRED STRUCTURE (follow exactly):
+    1. # H1 TITLE - Specific, compelling, searchable. Include the actual technology name.
+    2. *Italic subtitle* - One sentence hook: what problem does this solve?
+    3. INTRODUCTION - 2-3 paragraphs setting context. Why does this matter NOW?
+    4. ## TL;DR - 4-5 crisp, actionable bullets.
+    5. BODY - 3-5 ## H2 sections:
+       - Each H2 title must be specific (e.g., "How the Forking Library Intercepts RPC Calls")
+       - Each section: 2-4 paragraphs with concrete technical details
+       - Use bullet lists for steps, comparisons, feature lists
+       - Include code snippets ONLY if present in the notes
+    6. ## Key Takeaways - 3-5 actionable bullets telling readers what to DO
+    7. CLOSING paragraph with specific call-to-action (link, repo, next step)
+    8. ## Resources - Reference links if provided
+
+    WRITING RULES:
+    - Write like a human expert. Vary sentence length. Active voice.
+    - Be specific: name APIs, addresses, functions - not vague descriptions.
+    - ZERO filler: cut "It is worth noting", "In conclusion", "As we can see".
+    - ZERO hype: cut "revolutionary", "game-changing", "cutting-edge".
+    - Every paragraph must add NEW information. If it could be deleted, delete it.
+    - Do NOT invent facts not in the notes.
+  expected_output: >
+    A complete Medium-ready blog post in Markdown format, 1200-2000 words,
+    following the exact structure specified. Every claim must be traceable
+    to the source notes.
+  agent: technical_writer
+
+editing_task:
+  description: >
+    Review the blog draft against the source notes and produce a polished rewrite.
+
+    CHECK FOR:
+    1. STRUCTURE: Does it have H1, subtitle, intro, TL;DR, 3-5 H2 body sections,
+       Key Takeaways, closing CTA? If any are missing, add them.
+    2. DEPTH: Does each H2 section have 2-4 substantive paragraphs? If a section
+       is thin (1-2 sentences), EXPAND it using details from the source notes.
+    3. AI SLOP: Cut these patterns ruthlessly:
+       - "It is worth noting", "It is important to note", "As mentioned above"
+       - "In conclusion", "To summarize", "As we can see"
+       - "leverage", "utilize" (use "use" instead)
+       - "revolutionary", "game-changing", "cutting-edge", "powerful feature"
+       - Paragraphs that repeat the same point in different words
+    4. FLOW: Do sections transition naturally? Add bridge sentences if needed.
+    5. SPECIFICITY: Replace vague claims with concrete details from the notes.
+    6. ACCURACY: Every claim must be traceable to the source notes. Flag anything
+       that looks invented.
+
+    Produce a COMPLETE REWRITE - not a list of suggestions.
+  expected_output: >
+    A complete, polished blog post in Markdown that is ready for compliance review.
+    Every section should be substantive, every sentence should earn its place,
+    and the writing should read like a human expert's blog post.
+  agent: editor
+
+compliance_review_task:
+  description: >
+    Check the edited blog against Hedera's official content compliance rules.
+    Use the "Get Hedera Compliance Rules" tool to retrieve the full rule set.
+
+    For each violation found, fix it directly in the text. Common issues:
+    - "Hedera Hashgraph" as brand name -> should be just "Hedera"
+    - "blockchain" when describing Hedera -> should be "distributed ledger" or "DLT"
+    - "HEPs" -> should be "HIPs"
+    - "instant finality" -> should be "3-5 second finality"
+    - Investment advice or price predictions -> remove entirely
+    - Unverified partnership claims -> remove or qualify
+    - Hype language -> replace with factual descriptions
+
+    Produce the corrected blog with ALL violations fixed.
+  expected_output: >
+    The complete blog post with all compliance violations fixed. If the blog
+    was already compliant, return it unchanged. Do NOT add a compliance report -
+    just output the corrected blog.
+  agent: compliance_reviewer
+
+publishing_task:
+  description: >
+    Prepare the final blog for publishing:
+
+    1. Clean up Markdown formatting:
+       - Ensure consistent heading hierarchy (# H1, ## H2, ### H3)
+       - Fix any broken bullet lists or code blocks
+       - Remove any extra blank lines or formatting artifacts
+       - Ensure proper spacing between sections
+
+    2. Generate {titles_count} compelling title suggestions:
+       - Each under 70 characters
+       - Specific and searchable (include technology names)
+       - Based ONLY on the blog content (do not invent)
+
+    Output format: {output_format}
+
+    OUTPUT THE FINAL BLOG FIRST, then on a new line write exactly:
+    ---TITLES---
+    Then list the title suggestions, one per line.
+  expected_output: >
+    The final formatted blog post followed by ---TITLES--- and then
+    the title suggestions, one per line.
+  agent: publisher
