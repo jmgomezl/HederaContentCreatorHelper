@@ -3,535 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Building travel escrow and machine wallets on Hedera</title>
+<title>Hedera Content Blog</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   :root {
-    --hedera-purple: #8259EF;
-    --hedera-purple-light: #A78BFA;
-    --hedera-purple-bg: #F5F0FF;
-    --hedera-dark: #1A1A2E;
-    --text-primary: #1F2937;
-    --text-secondary: #4B5563;
-    --text-muted: #6B7280;
-    --border: #E5E7EB;
-    --bg-code: #F8F7FC;
-    --bg-callout: #FAFAFE;
-    --bg-white: #FFFFFF;
-    --accent-green: #10B981;
-    --accent-amber: #F59E0B;
+    --hedera-purple: #8259EF; --hedera-dark: #1A1A2E;
+    --text-primary: #1F2937; --text-secondary: #4B5563;
+    --border: #E5E7EB; --bg-white: #FFFFFF;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: var(--text-primary);
-    background: #F9FAFB;
-    line-height: 1.7;
-    -webkit-font-smoothing: antialiased;
+    font-family: 'Inter', sans-serif; color: var(--text-primary);
+    background: #F9FAFB; line-height: 1.7;
   }
-
-  .article-container {
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 60px 24px 80px;
-    background: var(--bg-white);
-    min-height: 100vh;
+  .container {
+    max-width: 780px; margin: 0 auto; padding: 60px 24px 80px;
+    background: var(--bg-white); min-height: 100vh;
     box-shadow: 0 0 40px rgba(0,0,0,0.04);
   }
-
-  /* Header */
-  .article-header {
-    margin-bottom: 48px;
-    padding-bottom: 32px;
-    border-bottom: 3px solid var(--hedera-purple);
-  }
-
-  .article-badge {
-    display: inline-block;
-    background: var(--hedera-purple);
-    color: white;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    padding: 4px 12px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-  }
-
   h1 {
-    font-size: 32px;
-    font-weight: 700;
-    line-height: 1.25;
-    color: var(--hedera-dark);
-    margin-bottom: 16px;
-    letter-spacing: -0.5px;
-  }
-
-  .subtitle {
-    font-size: 18px;
-    font-style: italic;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    border-left: 3px solid var(--hedera-purple-light);
-    padding-left: 16px;
-  }
-
-  /* Sections */
-  h2 {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--hedera-dark);
-    margin: 48px 0 16px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--hedera-purple-bg);
-    letter-spacing: -0.3px;
-  }
-
-  h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--hedera-purple);
-    margin: 32px 0 12px;
-  }
-
-  p {
-    margin-bottom: 16px;
-    color: var(--text-primary);
-    font-size: 16px;
-  }
-
-  /* Lists */
-  ul, ol {
-    margin: 12px 0 20px 24px;
-    color: var(--text-primary);
-  }
-
-  li {
+    font-size: 32px; font-weight: 700; color: var(--hedera-dark);
     margin-bottom: 8px;
-    font-size: 15px;
-    line-height: 1.65;
   }
-
-  li::marker {
-    color: var(--hedera-purple);
+  .tagline {
+    color: var(--text-secondary); font-size: 16px; margin-bottom: 40px;
+    padding-bottom: 24px; border-bottom: 3px solid var(--hedera-purple);
   }
-
-  /* TL;DR box */
-  .tldr {
-    background: linear-gradient(135deg, var(--hedera-purple-bg), #EDE9FE);
-    border: 1px solid #DDD6FE;
-    border-radius: 12px;
-    padding: 24px 28px;
-    margin: 32px 0;
+  .post-card {
+    display: block; padding: 24px; margin-bottom: 16px;
+    border: 1px solid var(--border); border-radius: 10px;
+    text-decoration: none; color: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-
-  .tldr h2 {
-    font-size: 18px;
-    color: var(--hedera-purple);
-    border: none;
-    margin: 0 0 12px;
-    padding: 0;
-  }
-
-  .tldr ul { margin-left: 20px; }
-
-  .tldr li {
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
-
-  /* Key Takeaways */
-  .takeaways {
-    background: #F0FDF4;
-    border: 1px solid #BBF7D0;
-    border-radius: 12px;
-    padding: 24px 28px;
-    margin: 32px 0;
-  }
-
-  .takeaways h2 {
-    font-size: 18px;
-    color: var(--accent-green);
-    border: none;
-    margin: 0 0 12px;
-    padding: 0;
-  }
-
-  .takeaways li {
-    font-size: 14px;
-    color: #166534;
-  }
-
-  .takeaways li::marker { color: var(--accent-green); }
-
-  /* Code */
-  code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    background: var(--hedera-purple-bg);
-    color: var(--hedera-purple);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 500;
-  }
-
-  pre {
-    background: var(--hedera-dark);
-    color: #E2E8F0;
-    border-radius: 10px;
-    padding: 24px;
-    margin: 20px 0;
-    overflow-x: auto;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    line-height: 1.7;
-    border: 1px solid #2D2D44;
-  }
-
-  pre code {
-    background: none;
-    color: inherit;
-    padding: 0;
-    font-size: 13px;
-  }
-
-  /* CTA box */
-  .cta-box {
-    background: linear-gradient(135deg, var(--hedera-dark), #2D1B69);
-    color: white;
-    border-radius: 12px;
-    padding: 32px;
-    margin: 40px 0;
-  }
-
-  .cta-box h2 {
-    color: white;
-    border: none;
-    margin: 0 0 16px;
-    padding: 0;
-    font-size: 22px;
-  }
-
-  .cta-box p, .cta-box li {
-    color: #D1D5DB;
-    font-size: 15px;
-  }
-
-  .cta-box li::marker { color: var(--hedera-purple-light); }
-
-  /* Verification notes */
-  .verification {
-    background: #FFFBEB;
-    border: 1px solid #FDE68A;
-    border-radius: 12px;
-    padding: 24px 28px;
-    margin: 32px 0;
-  }
-
-  .verification h2 {
-    font-size: 16px;
-    color: var(--accent-amber);
-    border: none;
-    margin: 0 0 12px;
-    padding: 0;
-  }
-
-  .verification li {
-    font-size: 14px;
-    color: #92400E;
-  }
-
-  .verification li::marker { color: var(--accent-amber); }
-
-  /* References */
-  .references {
-    margin-top: 48px;
-    padding-top: 24px;
-    border-top: 2px solid var(--border);
-  }
-
-  .references h2 {
-    font-size: 16px;
-    color: var(--text-muted);
-    border: none;
-    margin: 0 0 12px;
-    padding: 0;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .references ul { list-style: none; margin-left: 0; }
-
-  .references li {
-    margin-bottom: 6px;
-    font-size: 14px;
-  }
-
-  .references a {
-    color: var(--hedera-purple);
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.2s;
-  }
-
-  .references a:hover { border-bottom-color: var(--hedera-purple); }
-
-  /* Checklist box */
-  .checklist {
-    background: var(--bg-callout);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px 28px;
-    margin: 32px 0;
-  }
-
-  .checklist h2 {
-    font-size: 18px;
-    color: var(--text-primary);
-    border: none;
-    margin: 0 0 12px;
-    padding: 0;
-  }
-
-  /* Footer */
-  .article-footer {
-    margin-top: 48px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 13px;
-  }
-
-  .article-footer a {
-    color: var(--hedera-purple);
+  .post-card:hover {
+    border-color: var(--hedera-purple);
+    box-shadow: 0 4px 12px rgba(130,89,239,0.1);
     text-decoration: none;
   }
-
-  /* Responsive */
-  @media (max-width: 640px) {
-    .article-container { padding: 32px 16px 48px; }
-    h1 { font-size: 26px; }
-    h2 { font-size: 20px; }
-    pre { padding: 16px; font-size: 12px; }
+  .post-card h2 {
+    font-size: 20px; font-weight: 600; color: var(--hedera-dark);
+    margin-bottom: 8px; line-height: 1.3;
   }
+  .post-card .date {
+    font-size: 13px; color: var(--text-secondary);
+  }
+  .empty { color: var(--text-secondary); font-style: italic; margin-top: 24px; }
 </style>
 </head>
 <body>
-
-<div class="article-container">
-
-  <!-- Header -->
-  <header class="article-header">
-    <span class="article-badge">Hedera Technical Deep Dive</span>
-    <h1>Building travel escrow and machine wallets on Hedera: Zeni and Sealcoin's HTS + HCS patterns and hardware identity stack</h1>
-    <p class="subtitle">How a tokenized escrow + consensus log pattern solves multi-party travel settlements, and how hardware-backed device identities enable trillions of autonomous machine transactions.</p>
-  </header>
-
-  <!-- Introduction -->
-  <h2>Introduction</h2>
-  <p>Two enterprise problems converged on a single technical answer during a recent Hedera ecosystem call: travel bookings that split value across many counterparties, and devices that must transact autonomously and provably. Zeni and Sealcoin presented concrete architectures that map these problems to Hedera services plus secure hardware.</p>
-  <ul>
-    <li>Zeni embeds wallets and issues HTS tokens for escrowed booking funds while anchoring booking metadata to HCS.</li>
-    <li>Sealcoin issues X.509-style device certificates bound to hardware secure elements and ships post-quantum-ready microprocessors.</li>
-  </ul>
-  <p>The result: auditable, low-cost settlement for human bookings and a secure device identity layer for machine economics.</p>
-
-  <!-- TL;DR -->
-  <div class="tldr">
-    <h2>TL;DR (actionable)</h2>
-    <ul>
-      <li><strong>Zeni:</strong> model a booking as two on-ledger artifacts &mdash; HTS tokens for value (<code>tokenCreate</code>/<code>tokenMint</code>/<code>tokenTransfer</code>) and an HCS message for the authoritative booking record (<code>topicCreate</code>/<code>topicMessageSubmit</code>). Request Zenip SDK docs and pilot HTS token IDs / HCS topic IDs to map transactions to Hedera receipts.</li>
-      <li><strong>Sealcoin:</strong> issue device identities as X.509-style certificates, store keys in hardware secure elements, sign telemetry on-device, and manage certificate lifecycle (issue, rotate, revoke) through fleet tooling. Ask for microprocessor PQC specs and certificate issuance logs to validate post-quantum claims.</li>
-      <li><strong>Engineering next step:</strong> map each Zenip SDK endpoint to Hedera SDK calls (HTS + HCS), capture example receipts from pilots, and design revocation/rotation flows that accommodate post-quantum upgrades.</li>
-    </ul>
-  </div>
-
-  <!-- Section: Zeni HTS + HCS -->
-  <h2>How Zeni splits bookings into HTS tokens and an HCS single source of truth</h2>
-  <p>Zeni's core architectural decision is to treat every booking as a pair:</p>
-  <ol>
-    <li>A tokenized claim representing money in escrow (HTS).</li>
-    <li>A consensus-anchored, encrypted metadata record that defines settlement rules (HCS).</li>
-  </ol>
-  <p>Practically, Zeni mints HTS tokens to represent booking funds, distributes escrowed token balances to supplier wallets, and writes booking IDs, commission splits, and cancellation policies to HCS so all parties share the same ordered, timestamped record.</p>
-  <p>This split maps directly to Hedera primitives:</p>
-  <ul>
-    <li><strong>Hedera Token Service (HTS):</strong> native token operations (<code>tokenCreate</code>, <code>tokenMint</code>, <code>tokenAssociate</code>, <code>tokenTransfer</code>) without smart-contract gas overhead &mdash; enables low-cost, high-frequency transfers.</li>
-    <li><strong>Hedera Consensus Service (HCS):</strong> verifiable ordering and the ability to submit encrypted messages &mdash; Zeni encrypts booking payloads between counterparties and uses HCS as the immutable audit trail.</li>
-  </ul>
-  <p>The HCS message is the authoritative booking event with a consensus timestamp; HTS tokens are the live accounting entries for escrow and settlement. This separation prevents reconciliation mismatches.</p>
-
-  <h3>Operational consequences</h3>
-  <ul>
-    <li><strong>Non-refundable supplier claims:</strong> redeem by transferring HTS tokens to the supplier's Hedera account, then move redeemed tokens to a centralized treasury wallet for off-chain fiat settlement.</li>
-    <li><strong>Refundable portions:</strong> remain escrowed as HTS balances and can be priced as collateral in lending markets.</li>
-    <li><strong>Tradeoffs:</strong> native HTS for token speed/cost; HCS for tamper-proof event ordering and optional encryption.</li>
-  </ul>
-
-  <!-- Section: Zenip SDK -->
-  <h2>Zenip SDK booking lifecycle &mdash; from booking UI to treasury redemption</h2>
-  <p>The Zenip SDK is the integration point inside a white-label booking flow. Map Zeni's lifecycle to Hedera operations as follows:</p>
-  <ol>
-    <li>Package booking metadata (booking ID, consolidator ID, commission splits, cancellation policy, transaction feed) and encrypt the payload for intended counterparties.</li>
-    <li><strong>HTS token lifecycle:</strong>
-      <ul>
-        <li><code>tokenCreate</code> to define the token.</li>
-        <li><code>tokenMint</code> to issue the escrow amount.</li>
-        <li><code>tokenAssociate</code> / <code>tokenTransfer</code> to distribute escrowed claims into supplier and intermediary wallets.</li>
-      </ul>
-    </li>
-    <li><strong>HCS anchoring:</strong>
-      <ul>
-        <li><code>topicCreate</code> (or reuse an existing topic).</li>
-        <li><code>topicMessageSubmit</code> to write the encrypted booking payload and settlement rules with a consensus timestamp. Parties subscribe to the topic to receive the canonical event stream.</li>
-      </ul>
-    </li>
-    <li><strong>Conditional redemption:</strong>
-      <ul>
-        <li>Immediate settlement: <code>tokenTransfer</code> from supplier to treasury wallet.</li>
-        <li>Refundable portions: leave tokens escrowed and expose balances as collateral for lending products or internal liquidity operations.</li>
-      </ul>
-    </li>
-  </ol>
-
-  <p><strong>Example numeric flow:</strong></p>
-  <ul>
-    <li>A $10,000 booking is tokenized as HTS tokens worth $10,000.</li>
-    <li>$4,000 in tokens transferred to an airline (non-refundable).</li>
-    <li>$6,000 remains escrowed for hotel/car (potentially refundable).</li>
-    <li>HCS carries the cancellation policy determining when the $6,000 can be redeemed.</li>
-  </ul>
-  <p>For engineering, map each Zenip SDK function to the corresponding Hedera SDK call and log Hedera transaction receipts for auditability.</p>
-
-  <h3>Sequence (pseudocode)</h3>
-  <pre><code>1. Encrypt booking payload for parties
-2. HTS:
-   tokenCreate(...)
-   tokenMint(tokenId, amount)
-   tokenAssociate(account, tokenId)
-   tokenTransfer(tokenId, from, to, amount)
-3. HCS:
-   topicCreate(...)  // or reuse
-   topicMessageSubmit(topicId, encryptedPayload)
-4. On redemption:
-   tokenTransfer(tokenId, supplierAccount, treasuryAccount, amount)</code></pre>
-
-  <!-- Section: Sealcoin -->
-  <h2>Sealcoin's device identity stack: hardware secure elements, X.509 certificates, and PQC readiness</h2>
-  <p>Sealcoin's device model embeds a crypto wallet and a hardware identity inside a secure microprocessor. Each device receives a certificate of authenticity in an X.509-style format that binds the public key to device identity. Private keys are generated and stored inside the secure element; they never leave the chip. Devices sign telemetry and on-chain/off-chain transactions directly from the secure element, enabling provable origin for machine data and payments.</p>
-
-  <h3>Fleet management requirements</h3>
-  <ul>
-    <li><strong>Scalable certificate issuance:</strong> bulk-issue certificates to thousands or millions of devices.</li>
-    <li><strong>Certificate lifecycle:</strong> issue, rotate, and revoke certificates; propagate revocation to on-ledger indexers or data consumers.</li>
-    <li><strong>PQC readiness:</strong> Sealcoin ships post-quantum-ready microprocessors and participates in Hedera Improvement Proposals (HIPs) to ensure network and application stacks can migrate key material and verify PQC signatures.</li>
-  </ul>
-
-  <h3>Engineering elements to implement</h3>
-  <ul>
-    <li>Hardware root of trust and signing APIs that expose on-device signing without exporting private keys.</li>
-    <li>A PKI issuance pipeline that emits X.509-style certificates mapped to device IDs and owner wallets.</li>
-    <li>Revocation lists and on-ledger revocation anchors so data consumers reject telemetry from revoked devices.</li>
-    <li>Versioned verification code that accepts both classical and PQC signatures during a migration window.</li>
-  </ul>
-
-  <!-- Section: Trade-offs -->
-  <h2>Design trade-offs: custody, privacy, and DeFi against refundable bookings</h2>
-
-  <h3>UX and custody</h3>
-  <ul>
-    <li>Start custodial to reduce friction: operations can manage KYC/KYB and recovery processes.</li>
-    <li>Plan a migration path to non-custodial/self-custody as users and devices accumulate meaningful value. Include key export and wallet migration flows.</li>
-  </ul>
-
-  <h3>Privacy via encrypted HCS messages</h3>
-  <p>Use HCS encryption for booking payloads so only authorized counterparties can decrypt booking metadata while preserving a consensus-anchored audit log.</p>
-
-  <h3>Monetizing refundable escrows with DeFi</h3>
-  <ul>
-    <li>Lend against refundable booking balances by tranching pools by supplier or booking risk profile and estimating non-cancellation probabilities.</li>
-    <li>Lenders need priority claims defined either in contract logic (EVM smart contracts on Hedera where needed) or in explicit off-ledger settlement agreements backed by on-ledger receipts.</li>
-    <li>Risk controls: <code>tokenKYC</code>, <code>tokenFreeze</code>, and monitored liquidity windows tied to HCS-anchored policy events.</li>
-  </ul>
-
-  <!-- Checklist -->
-  <div class="checklist">
-    <h2>Integration checklist and verification requests for engineering teams</h2>
-    <p>Before replicating these patterns in production, collect the following artifacts from partners and pilots:</p>
-    <ul>
-      <li><strong>Zenip SDK documentation:</strong> function names, parameters, error cases, and sample flows mapping to Hedera SDK calls.</li>
-      <li><strong>Pilot Hedera artifacts:</strong> HTS token IDs, HCS topic IDs, and Hedera account receipts for sample bookings (to verify on-ledger events and timestamps).</li>
-      <li><strong>HCS message schema and encryption details:</strong> exact payload structure, encryption scheme, and key distribution method used between counterparties.</li>
-      <li><strong>Sealcoin hardware specs:</strong> microprocessor datasheets, PQC algorithm names, and certificate issuance logs to audit "post-quantum ready" claims.</li>
-      <li><strong>Proof points:</strong> transaction logs supporting reported pilot settlements and certificate issuance counts referenced by speakers.</li>
-    </ul>
-    <p>These items are necessary to validate pilot results, run independent audits, and reproduce flows in staging environments.</p>
-  </div>
-
-  <!-- Key Takeaways -->
-  <div class="takeaways">
-    <h2>Key takeaways</h2>
-    <ul>
-      <li><strong>HTS + HCS pattern:</strong> treat value and policy as separate but linked on-ledger artifacts &mdash; HTS for tokenized escrow, HCS for the authoritative, timestamped event log.</li>
-      <li><strong>Device identity:</strong> bind device keys to hardware secure elements, issue X.509-style certificates, and manage certificate lifecycle at fleet scale.</li>
-      <li><strong>Pragmatic UX:</strong> start custodial to reduce friction, then provide a clear migration path to self-custody and owner control.</li>
-      <li><strong>DeFi on escrow:</strong> refundable booking balances can be used as collateral but require explicit risk models, priority claims, and regulatory controls.</li>
-      <li><strong>Finality and settlement:</strong> design settlement flows that account for Hedera's ~3&ndash;5 second finality rather than implying instant finality.</li>
-      <li><strong>Verification required:</strong> collect SDK docs, token/topic IDs, PQC specs, and transaction receipts before publishing technical case studies.</li>
-    </ul>
-  </div>
-
-  <!-- CTA -->
-  <div class="cta-box">
-    <h2>Next steps / Call to action</h2>
-    <p>If you're building either flow, I will:</p>
-    <ul>
-      <li>Map your Zenip or booking flow to exact Hedera SDK calls and produce a sequence diagram showing: super app &rarr; Zenip SDK &rarr; HTS &rarr; HCS &rarr; supplier wallets &rarr; treasury.</li>
-      <li>Draft an integration checklist that maps Zenip SDK functions to Hedera SDK calls, with sample pseudocode and expected Hedera receipts to capture.</li>
-      <li>Review Sealcoin's PQC datasheet and certificate logs to define a migration plan that works with Hedera's governance and HIP processes.</li>
-    </ul>
-    <p style="margin-top: 20px;"><strong>Reply with any of the following to get started:</strong></p>
-    <ul>
-      <li>Zenip SDK docs and a sample booking payload, or</li>
-      <li>Sample HTS token IDs and HCS topic IDs from your pilot, or</li>
-      <li>Sealcoin microprocessor PQC specs and a sample device certificate.</li>
-    </ul>
-  </div>
-
-  <!-- Verification -->
-  <div class="verification">
-    <h2>Verification notes (claims flagged for follow-up)</h2>
-    <ul>
-      <li>Pilot settlement numbers and scale claims should be validated with transaction receipts, issuance logs, or partner documentation.</li>
-      <li>TGE timing references mentioned in the discussion should be verified against company records and the original call date.</li>
-      <li>No Hedera account addresses, token IDs, topic IDs, or SDK function signatures were presented in the call; request those artifacts to complete a reproducible technical case study.</li>
-    </ul>
-  </div>
-
-  <!-- References -->
-  <div class="references">
-    <h2>References</h2>
-    <ul>
-      <li><a href="https://hedera.com/learning/service/token-service/">Hedera Token Service (HTS)</a></li>
-      <li><a href="https://hedera.com/learning/consensus/service/consensus-service/">Hedera Consensus Service (HCS)</a></li>
-      <li><a href="https://hedera.com/learning/service/smart-contract-service/">Hedera Smart Contract Service (EVM)</a></li>
-      <li><a href="https://docs.hedera.com/hedera/core-concepts">Hedera core concepts &amp; white papers</a></li>
-    </ul>
-  </div>
-
-  <p style="margin-top: 24px; font-size: 14px; color: var(--text-muted);">If you want the sequence diagram and a mapped SDK&rarr;Hedera call table, send one sample booking payload or a Zenip SDK endpoint and I'll produce both within two business days.</p>
-
-  <!-- Footer -->
-  <div class="article-footer">
-    <p>Generated by <a href="#">HederaContentCreatorHelper</a> &mdash; Multi-agent CrewAI pipeline</p>
-  </div>
-
+<div class="container">
+  <h1>Hedera Content Blog</h1>
+  <p class="tagline">Technical blog posts generated from Hedera livestreams by AI agents</p>
+    <a href="posts/test-post-hedera-forking-library.html" class="post-card">
+    <h2>Test Post: Hedera Forking Library</h2>
+    <span class="date">April 13, 2026</span>
+  </a>
 </div>
-
 </body>
 </html>
