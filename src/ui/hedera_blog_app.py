@@ -48,6 +48,7 @@ def generate_blog(
     reference_links: str,
     enrich_with_docs: bool,
     compliance_check: bool,
+    auto_publish: bool,
     model_choice: str,
     custom_model: str,
     output_format: str,
@@ -93,7 +94,23 @@ def generate_blog(
             titles_count=int(titles_count),
             output_format=output_format,
         )
-        return result["blog"], result["titles"], result["status"]
+        blog = result["blog"]
+        titles = result["titles"]
+        status = result["status"]
+
+        # Auto-publish to GitHub Pages
+        if auto_publish and blog:
+            try:
+                from rag.publisher import publish_to_github_pages
+                url, pub_error = publish_to_github_pages(blog)
+                if url:
+                    status += f" | Published: {url}"
+                elif pub_error:
+                    status += f" | Publish failed: {pub_error}"
+            except Exception as pub_exc:
+                status += f" | Publish error: {pub_exc}"
+
+        return blog, titles, status
     except Exception as exc:  # noqa: BLE001 - surface to UI
         return "", "", f"Error: {exc}"
 
@@ -147,14 +164,18 @@ Pick a recent Hedera livestream (or paste a URL) and get a publish-ready technic
             lines=3,
         )
 
-        # --- RAG & Compliance toggles ---
+        # --- RAG, Compliance & Publish toggles ---
         with gr.Row():
             enrich_with_docs = gr.Checkbox(
-                label="Enrich with official Hedera docs (docs.hedera.com, blog, learning)",
+                label="Enrich with official Hedera docs",
                 value=True,
             )
             compliance_check = gr.Checkbox(
-                label="Auto-check Hedera content compliance",
+                label="Auto-check compliance",
+                value=True,
+            )
+            auto_publish = gr.Checkbox(
+                label="Auto-publish to GitHub Pages",
                 value=True,
             )
 
@@ -232,6 +253,7 @@ Pick a recent Hedera livestream (or paste a URL) and get a publish-ready technic
                 reference_links,
                 enrich_with_docs,
                 compliance_check,
+                auto_publish,
                 model_choice,
                 custom_model,
                 output_format,
