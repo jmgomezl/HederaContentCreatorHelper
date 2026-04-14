@@ -148,14 +148,19 @@ def process_livestream(
         return False, f"Crew error: {exc}"
 
     blog = result.get("blog", "")
+    tags = result.get("tags", [])
     if not blog:
         return False, "Crew produced empty blog"
 
-    logger.info("Blog generated: %d chars", len(blog))
+    logger.info("Blog generated: %d chars, %d tags", len(blog), len(tags))
 
     # Publish to GitHub Pages
     try:
-        live_url, pub_error = publish_to_github_pages(blog)
+        live_url, pub_error = publish_to_github_pages(
+            blog,
+            focus="Hedera ecosystem, HTS, HCS, smart contracts, tooling",
+            tags=tags,
+        )
         if pub_error:
             return False, f"Publish error: {pub_error}"
         return True, live_url

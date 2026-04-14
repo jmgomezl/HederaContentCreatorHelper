@@ -96,13 +96,22 @@ def generate_blog(
         )
         blog = result["blog"]
         titles = result["titles"]
+        tags = result.get("tags", [])
         status = result["status"]
+
+        # Append tags to the titles output for visibility in the UI
+        if tags:
+            titles = titles + "\n\n--- Tags ---\n" + "\n".join(tags)
 
         # Auto-publish to GitHub Pages
         if auto_publish and blog:
             try:
                 from rag.publisher import publish_to_github_pages
-                url, pub_error = publish_to_github_pages(blog)
+                url, pub_error = publish_to_github_pages(
+                    blog,
+                    focus=focus,
+                    tags=tags,
+                )
                 if url:
                     status += f" | Published: {url}"
                 elif pub_error:

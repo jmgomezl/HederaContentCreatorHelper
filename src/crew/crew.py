@@ -272,14 +272,8 @@ class ContentBlogCrew:
         result = crew.kickoff(inputs=inputs)
         output = str(result)
 
-        # Parse output: blog + titles separated by ---TITLES---
-        if "---TITLES---" in output:
-            parts = output.split("---TITLES---", 1)
-            blog = parts[0].strip()
-            titles = parts[1].strip()
-        else:
-            blog = output.strip()
-            titles = ""
+        # Parse output: blog + titles + tags separated by ---TITLES--- and ---TAGS---
+        blog, titles, tags = self._parse_publisher_output(output)
 
         agent_count = len(crew.agents)
         task_count = len(crew.tasks)
@@ -288,11 +282,55 @@ class ContentBlogCrew:
             f"Agents: {agent_count}. Tasks: {task_count}. "
             f"Docs enrichment: {'on' if self.include_docs else 'off'}. "
             f"Compliance check: {'on' if self.include_compliance else 'off'}. "
-            f"Output format: {output_format}."
+            f"Output format: {output_format}. "
+            f"Tags: {len(tags)}."
         )
 
         return {
             "blog": blog,
             "titles": titles,
+            "tags": tags,
             "status": status,
         }
+
+    @staticmethod
+    def _parse_publisher_output(output: str) -> tuple[str, str, list[str]]:
+        """Parse the publisher's output into (blog, titles, tags).
+
+        Expected format:
+            {blog markdown}
+            ---TITLES---
+            {title 1}
+            {title 2}
+            ...
+            ---TAGS---
+            {tag 1}
+            {tag 2}
+            ...
+
+        All separators are optional - missing sections return empty defaults.
+        """
+        # Split on ---TAGS--- first (innermost separator)
+        if "---TAGS---" in output:
+            head, tags_section = output.split("---TAGS---", 1)
+            tags = [
+                line.strip().lstrip("-").strip().lower().replace(" ", "-")
+                for line in tags_section.strip().splitlines()
+                if line.strip() and not line.strip().startswith("#")
+            ]
+            # Cap to 5 (Medium's limit) and strip empty
+            tags = [t for t in tags if t][:5]
+        else:
+            head = output
+            tags = []
+
+        # Then split head on ---TITLES---
+        if "---TITLES---" in head:
+            blog, titles_section = head.split("---TITLES---", 1)
+            blog = blog.strip()
+            titles = titles_section.strip()
+        else:
+            blog = head.strip()
+            titles = ""
+
+        return blog, titles, tags

@@ -141,12 +141,31 @@ publishing_task:
        - Specific and searchable (include technology names)
        - Based ONLY on the blog content (do not invent)
 
+    3. Generate exactly 5 Medium tags:
+       - Lowercase, single words or short hyphenated phrases
+       - Specific to the blog content (no generic tags like "blockchain")
+       - Mix of broad reach (e.g. "hedera", "web3") and specific topic
+         (e.g. "smart-contracts", "consensus", "evm", "hts", "hcs", "defi")
+       - Each tag under 25 characters
+       - Examples: hedera, hts, smart-contracts, web3-development, defi
+
     Output format: {output_format}
 
-    OUTPUT THE FINAL BLOG FIRST, then on a new line write exactly:
+    OUTPUT EXACTLY in this format (with the separators verbatim):
+
+    {{the final blog content}}
     ---TITLES---
-    Then list the title suggestions, one per line.
+    {{title 1}}
+    {{title 2}}
+    ...
+    ---TAGS---
+    {{tag1}}
+    {{tag2}}
+    {{tag3}}
+    {{tag4}}
+    {{tag5}}
   expected_output: >
-    The final formatted blog post followed by ---TITLES--- and then
-    the title suggestions, one per line.
+    The final formatted blog post followed by ---TITLES--- (with title
+    suggestions, one per line), followed by ---TAGS--- (with exactly 5 tags,
+    one per line). All separators must appear verbatim on their own lines.
   agent: publisher
