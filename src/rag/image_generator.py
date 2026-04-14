@@ -19,12 +19,20 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-# Cheapest Imagen model — see https://ai.google.dev/gemini-api/docs/pricing
-IMAGEN_MODEL = "imagen-4.0-fast-generate-001"
+# Imagen model selection notes (https://ai.google.dev/gemini-api/docs/pricing):
+#   - imagen-4.0-fast-generate-001    ~$0.02 — cheapest but ignores "no text"
+#                                              prompts and produces garbled letters
+#   - imagen-4.0-generate-001          ~$0.04 — standard quality, follows negative
+#                                              prompts reliably (RECOMMENDED)
+#   - imagen-4.0-ultra-generate-001    ~$0.06 — best quality, 1.5x cost
+#
+# We use STANDARD (not fast) because the fast model produces garbled text in
+# generated images. At 1 blog/week the difference is ~$1/year.
+IMAGEN_MODEL = "imagen-4.0-generate-001"
 IMAGEN_ENDPOINT = (
     f"https://generativelanguage.googleapis.com/v1beta/models/{IMAGEN_MODEL}:predict"
 )
-REQUEST_TIMEOUT = 90  # seconds
+REQUEST_TIMEOUT = 120  # seconds (standard model is slightly slower than fast)
 
 
 def is_enabled() -> bool:
@@ -39,39 +47,52 @@ def build_image_prompt(title: str, focus: str = "") -> str:
 
     IMPORTANT: This prompt is engineered to FORBID all text in the generated image.
     Text generators (including Imagen) often produce garbled, misspelled, or
-    nonsensical text. The safest approach is to instruct the model to never
-    include any text, words, letters, numbers, or logos. The blog title is
-    rendered in HTML separately, so the cover image only needs to be visual.
+    nonsensical text. The blog title is rendered separately in HTML, so the
+    cover image only needs to be visual.
+
+    The prompt strategy:
+    1. Lead with the visual style description (positive instruction)
+    2. NEVER mention "code", "screen", "monitor", "ui", "dashboard", "interface"
+       in the visual hints — these strongly bias the model toward text-like content
+    3. Use abstract terms: "geometric", "particles", "flows", "patterns"
+    4. End with strong, repeated no-text constraints (negative instruction)
     """
-    # Strong negative-text constraints repeated for emphasis - Imagen respects
-    # repetition more than single mentions.
-    no_text_clause = (
-        "ABSOLUTELY NO TEXT in the image. No words, no letters, no numbers, "
-        "no captions, no labels, no logos, no signage, no watermarks, no symbols "
-        "that resemble characters. The image must be purely visual and abstract. "
-    )
-
     base = (
-        "Modern minimalist tech blog cover image, abstract geometric shapes, "
-        "deep purple and dark blue gradient background, subtle blockchain network "
-        "patterns, professional editorial style, cinematic lighting. "
-        + no_text_clause
+        "Abstract minimalist editorial illustration, futuristic technology theme, "
+        "deep purple and dark navy gradient background, glowing geometric particles, "
+        "flowing energy streams, soft volumetric lighting, cinematic depth of field, "
+        "professional magazine cover style, ultra-clean composition. "
     )
 
-    # Add a topic-specific visual hint
+    # Add a topic-specific visual hint - using ONLY abstract/visual descriptors,
+    # never mentioning code, text, labels, screens, or anything letter-like.
     topic = title.lower()
     if "smart contract" in topic or "evm" in topic or "solidity" in topic:
-        base += "Stylized abstract code blocks and contract diagrams floating in space (no readable text). "
+        base += "Interconnected geometric nodes forming an abstract network mesh, glowing connections. "
     elif "token" in topic or "hts" in topic:
-        base += "Glowing hexagonal token shapes connected by light streams (no text or numbers on the tokens). "
+        base += "Translucent hexagonal crystal shapes floating in space with light beams between them. "
     elif "consensus" in topic or "hcs" in topic or "hashgraph" in topic:
-        base += "Interconnected nodes forming a directed acyclic graph network. "
+        base += "Layered abstract topology of bright dots and curved light trails, organic network shapes. "
     elif "wallet" in topic or "identity" in topic or "device" in topic:
-        base += "Secure hardware chip with circuit traces and microelectronic patterns. "
+        base += "Abstract microchip silhouette with glowing circuit-like geometric tracings. "
     elif "defi" in topic or "lending" in topic or "stablecoin" in topic:
-        base += "Financial dashboard with abstract liquidity flows and curved data streams. "
+        base += "Curving abstract liquidity ribbons and floating geometric tokens in deep space. "
+    elif "ai" in topic or "agent" in topic:
+        base += "Abstract neural network of glowing nodes and pulses, organic data flows. "
     else:
-        base += "Hedera ecosystem visualization with flowing data streams and geometric particles. "
+        base += "Abstract Hedera ecosystem visualization with flowing energy and floating geometric particles. "
+
+    # Strong, repeated negative constraints at the END (image models weight
+    # tail instructions more heavily). Multiple phrasings of the same idea.
+    base += (
+        "PURELY ABSTRACT VISUAL ONLY. "
+        "Strictly no text. No words. No letters. No numbers. No captions. "
+        "No labels. No logos. No watermarks. No signs. No typography. "
+        "No characters. No symbols that resemble writing. No book pages. "
+        "No documents. No screens displaying text. No code editors. "
+        "No user interface elements. No buttons with labels. "
+        "The image must be 100 percent textless and purely visual."
+    )
 
     return base
 

@@ -138,11 +138,12 @@ class TestBuildImagePrompt:
         assert "hedera" in prompt.lower()  # Falls through to ecosystem default
 
     def test_prompt_always_forbids_text(self):
-        """SAFETY CONTRACT: every prompt must explicitly forbid text in the image.
+        """SAFETY CONTRACT: every prompt must aggressively forbid text in the image.
 
-        Image generators frequently produce garbled or misspelled text. The blog
-        title is rendered in HTML separately, so the cover image must be purely
-        visual. This test enforces that contract for ALL topic variations.
+        Image generators (especially the fast variant) produce garbled or
+        misspelled text. The blog title is rendered in HTML separately, so the
+        cover image must be purely visual. This test enforces aggressive
+        no-text constraints for ALL topic variations.
         """
         from rag.image_generator import build_image_prompt
         topics = [
@@ -151,17 +152,56 @@ class TestBuildImagePrompt:
             "Hashgraph Consensus Internals",
             "Hardware Wallet Security",
             "DeFi Lending Pools",
+            "AI Agents on Hedera",
             "Some Random Topic With No Keywords",
             "",  # Empty title edge case
+        ]
+        # The hardened prompt must include all of these constraint phrases
+        required_negatives = [
+            "no text", "no words", "no letters", "no numbers",
+            "no logos", "no captions", "no labels", "no typography",
         ]
         for title in topics:
             prompt = build_image_prompt(title)
             lower = prompt.lower()
-            # Must explicitly forbid all forms of text
-            assert "no text" in lower, f"Missing 'no text' for: {title!r}"
-            assert "no words" in lower, f"Missing 'no words' for: {title!r}"
-            assert "no letters" in lower, f"Missing 'no letters' for: {title!r}"
-            assert "no logos" in lower, f"Missing 'no logos' for: {title!r}"
+            for needed in required_negatives:
+                assert needed in lower, (
+                    f"Missing constraint {needed!r} for title {title!r}"
+                )
+
+    def test_prompt_does_not_mention_text_inducing_terms(self):
+        """The prompt must NEVER include words that bias the model toward text.
+
+        Words like 'code editor', 'screen', 'monitor', 'dashboard', 'document'
+        strongly suggest text-containing imagery to the model, even if we
+        say 'no text' afterwards. We must avoid those completely.
+        """
+        from rag.image_generator import build_image_prompt
+        # Topics that USED to mention text-inducing terms in old prompts
+        topics = [
+            "Smart Contracts",
+            "DeFi Dashboard Stats",
+            "EVM Code Patterns",
+        ]
+        # Forbidden in the POSITIVE part of the prompt (we DO mention them
+        # in the negative section "no code editors" etc — that's expected)
+        for title in topics:
+            prompt = build_image_prompt(title)
+            # Split prompt into positive (start) and negative (after the
+            # "no text" enforcement section) and check only the positive part
+            negative_marker = "PURELY ABSTRACT VISUAL ONLY"
+            assert negative_marker in prompt
+            positive = prompt.split(negative_marker)[0].lower()
+            # These terms should NOT appear in the visual description
+            forbidden_in_positive = [
+                "code editor", "screen", "monitor", "dashboard",
+                "document", "page",
+            ]
+            for term in forbidden_in_positive:
+                assert term not in positive, (
+                    f"Positive prompt for {title!r} contains text-inducing "
+                    f"term {term!r} - this biases the model toward text"
+                )
 
 
 # ─── generate_image() ───────────────────────────────────────────────
@@ -202,10 +242,21 @@ class TestGenerateImage:
         _, kwargs = mock_post.call_args
         assert kwargs["json"]["parameters"]["sampleCount"] == 1
 
-    def test_uses_cheapest_model(self, enabled_env, tmp_output):
-        """Cost control: must use the fast (cheapest) Imagen model."""
+    def test_uses_bounded_cost_model(self, enabled_env, tmp_output):
+        """Cost contract: must use a bounded-cost Imagen model.
+
+        We use imagen-4.0-generate-001 (standard) NOT imagen-4.0-ultra-generate-001
+        because:
+        - "fast" produces garbled text (we tried it, user reported text mistakes)
+        - "standard" follows negative prompts reliably and renders any text correctly
+        - "ultra" is 1.5x more expensive than standard for marginal quality gains
+        """
         from rag.image_generator import generate_image, IMAGEN_MODEL
-        assert "fast" in IMAGEN_MODEL.lower()
+        # Must be an Imagen 4 model
+        assert "imagen-4" in IMAGEN_MODEL.lower()
+        # Forbid the most expensive variant
+        assert "ultra" not in IMAGEN_MODEL.lower(), \
+            "Cost contract: never use Imagen Ultra (1.5x cost vs standard)"
         with patch("requests.post", return_value=_mock_success_response()) as mock_post:
             generate_image("Test", "test", tmp_output)
         url = mock_post.call_args[0][0]
