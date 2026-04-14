@@ -49,6 +49,11 @@ HTML_TEMPLATE = """\
     margin-bottom: 48px; padding-bottom: 32px;
     border-bottom: 3px solid var(--hedera-purple);
   }}
+  .cover-image {{
+    width: 100%; height: auto; border-radius: 12px;
+    margin-bottom: 32px; box-shadow: 0 8px 32px rgba(130,89,239,0.2);
+    display: block;
+  }}
   .article-badge {{
     display: inline-block; background: var(--hedera-purple); color: white;
     font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
@@ -113,6 +118,7 @@ HTML_TEMPLATE = """\
 <body>
 <div class="article-container">
   <a href="../" class="back-link">&larr; All posts</a>
+  {cover_image_html}
   <header class="article-header">
     <span class="article-badge">Hedera Technical Deep Dive</span>
     <h1>{title}</h1>
@@ -219,25 +225,42 @@ def _extract_title_and_subtitle(blog_md: str) -> tuple[str, str]:
     return title, subtitle
 
 
-def markdown_to_html(blog_md: str, title: str = "", subtitle: str = "") -> str:
-    """Convert Markdown blog to styled HTML page."""
+def markdown_to_html(
+    blog_md: str,
+    title: str = "",
+    subtitle: str = "",
+    cover_image_filename: str = "",
+) -> str:
+    """Convert Markdown blog to styled HTML page.
+
+    Args:
+        blog_md: The blog content in Markdown.
+        title: Optional H1 title (auto-extracted from md if missing).
+        subtitle: Optional italic subtitle.
+        cover_image_filename: If provided, embed at top (relative to post HTML).
+    """
     if not title:
         title, subtitle = _extract_title_and_subtitle(blog_md)
     if not title:
         title = "Hedera Technical Blog"
 
-    # Convert markdown to HTML body
     body_html = markdown.markdown(
         blog_md,
         extensions=["fenced_code", "tables", "toc"],
     )
 
     subtitle_html = f'<p class="subtitle">{subtitle}</p>' if subtitle else ""
+    cover_image_html = (
+        f'<img class="cover-image" src="{cover_image_filename}" alt="{title}" />'
+        if cover_image_filename
+        else ""
+    )
     date = datetime.now().strftime("%B %d, %Y")
 
     return HTML_TEMPLATE.format(
         title=title,
         subtitle_html=subtitle_html,
+        cover_image_html=cover_image_html,
         date=date,
         body=body_html,
     )
@@ -284,6 +307,7 @@ def publish_to_github_pages(
     blog_md: str,
     title: str = "",
     subtitle: str = "",
+    focus: str = "",
 ) -> tuple[str, str]:
     """Publish a blog post to GitHub Pages.
 
@@ -295,8 +319,28 @@ def publish_to_github_pages(
 
     slug = _slugify(title) if title else f"post-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
-    # Generate HTML
-    html = markdown_to_html(blog_md, title, subtitle)
+    # Generate cover image (optional - silently skips if disabled or fails)
+    cover_image_filename = ""
+    try:
+        from rag.image_generator import generate_image
+        POSTS_DIR.mkdir(parents=True, exist_ok=True)
+        cover_image_filename, img_error = generate_image(
+            title=title,
+            slug=slug,
+            output_dir=POSTS_DIR,
+            focus=focus,
+        )
+        if img_error and not cover_image_filename:
+            # Log but don't fail the publish
+            import logging
+            logging.getLogger(__name__).info("Image gen skipped: %s", img_error)
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("Image gen exception: %s", exc)
+        cover_image_filename = ""
+
+    # Generate HTML (with cover image if available)
+    html = markdown_to_html(blog_md, title, subtitle, cover_image_filename)
 
     # Write post file
     POSTS_DIR.mkdir(parents=True, exist_ok=True)

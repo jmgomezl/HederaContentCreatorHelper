@@ -1,8 +1,27 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
-.env
-.pytest_cache/
+*.pyo
 *.egg-info/
 dist/
 build/
+.pytest_cache/
+
+# Secrets & API keys (NEVER commit these)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*credentials*
+*secret*
+*.token
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
