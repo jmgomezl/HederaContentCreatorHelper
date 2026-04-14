@@ -219,16 +219,21 @@ def main():
                 "url": result_msg,
                 "published_at": datetime.now().isoformat(),
             })
+            # Save IMMEDIATELY after each success to prevent duplicates
+            # if the script is interrupted mid-loop.
             if not args.dry_run:
                 processed_ids.add(livestream["video_id"])
+                data["processed"] = list(processed_ids)
+                data["last_run"] = datetime.now().isoformat()
+                data["last_run_results"] = processed_this_run
+                save_processed(data)
         else:
             logger.error("FAILED: %s -> %s", livestream["title"], result_msg)
 
-    # 5. Save processed state
-    if not args.dry_run:
-        data["processed"] = list(processed_ids)
+    # 5. Final save (in case no successes, still record last_run)
+    if not args.dry_run and not processed_this_run:
         data["last_run"] = datetime.now().isoformat()
-        data["last_run_results"] = processed_this_run
+        data["last_status"] = "all candidates failed"
         save_processed(data)
 
     # 6. Notify
