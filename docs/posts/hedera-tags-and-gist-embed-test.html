@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hedera Tags and Gist Embed Test</title>
+<meta name="description" content="Verifying that tags pills render and code blocks become Gist embeds for Medium import.">
+<meta property="og:title" content="Hedera Tags and Gist Embed Test">
+<meta property="og:description" content="Verifying that tags pills render and code blocks become Gist embeds for Medium import.">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://jmgomezl.github.io/HederaContentCreatorHelper/posts/image-hedera-tags-and-gist-embed-test.png">
+<meta name="twitter:image" content="https://jmgomezl.github.io/HederaContentCreatorHelper/posts/image-hedera-tags-and-gist-embed-test.png">
+<meta name="keywords" content="hedera, hts, smart-contracts, web3, developer-tools">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --hedera-purple: #8259EF; --hedera-purple-light: #A78BFA;
+    --hedera-purple-bg: #F5F0FF; --hedera-dark: #1A1A2E;
+    --text-primary: #1F2937; --text-secondary: #4B5563;
+    --text-muted: #6B7280; --border: #E5E7EB;
+    --bg-code: #F8F7FC; --bg-white: #FFFFFF;
+    --accent-green: #10B981;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-primary); background: #F9FAFB;
+    line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  .article-container {
+    max-width: 780px; margin: 0 auto; padding: 60px 24px 80px;
+    background: var(--bg-white); min-height: 100vh;
+    box-shadow: 0 0 40px rgba(0,0,0,0.04);
+  }
+  .article-header {
+    margin-bottom: 48px; padding-bottom: 32px;
+    border-bottom: 3px solid var(--hedera-purple);
+  }
+  .cover-image {
+    width: 100%; height: auto; border-radius: 12px;
+    margin-bottom: 32px; box-shadow: 0 8px 32px rgba(130,89,239,0.2);
+    display: block;
+  }
+  .article-badge {
+    display: inline-block; background: var(--hedera-purple); color: white;
+    font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+    text-transform: uppercase; padding: 4px 12px; border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 32px; font-weight: 700; line-height: 1.25;
+    color: var(--hedera-dark); margin-bottom: 16px; letter-spacing: -0.5px;
+  }
+  .subtitle {
+    font-size: 18px; font-style: italic; color: var(--text-secondary);
+    line-height: 1.6; border-left: 3px solid var(--hedera-purple-light);
+    padding-left: 16px;
+  }
+  .meta { font-size: 13px; color: var(--text-muted); margin-top: 16px; }
+  h2 {
+    font-size: 24px; font-weight: 700; color: var(--hedera-dark);
+    margin: 48px 0 16px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--hedera-purple-bg); letter-spacing: -0.3px;
+  }
+  h3 {
+    font-size: 18px; font-weight: 600; color: var(--hedera-purple);
+    margin: 32px 0 12px;
+  }
+  p { margin-bottom: 16px; font-size: 16px; }
+  ul, ol { margin: 12px 0 20px 24px; }
+  li { margin-bottom: 8px; font-size: 15px; line-height: 1.65; }
+  li::marker { color: var(--hedera-purple); }
+  code {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    background: var(--hedera-purple-bg); color: var(--hedera-purple);
+    padding: 2px 6px; border-radius: 4px; font-weight: 500;
+  }
+  pre {
+    background: var(--hedera-dark); color: #E2E8F0; border-radius: 10px;
+    padding: 24px; margin: 20px 0; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    line-height: 1.7; border: 1px solid #2D2D44;
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; font-size: 13px;
+  }
+  a { color: var(--hedera-purple); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back-link {
+    display: inline-block; margin-bottom: 24px; font-size: 14px;
+    color: var(--hedera-purple);
+  }
+  .article-footer {
+    margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border);
+    text-align: center; color: var(--text-muted); font-size: 13px;
+  }
+  .tags {
+    margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .tag {
+    display: inline-block; padding: 6px 14px; border-radius: 999px;
+    background: var(--hedera-purple-bg); color: var(--hedera-purple);
+    font-size: 13px; font-weight: 500; text-decoration: none;
+  }
+  .medium-import {
+    margin-top: 24px; padding: 16px 20px;
+    background: var(--bg-callout, #FAFAFE); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px; color: var(--text-secondary);
+  }
+  .medium-import a { color: var(--hedera-purple); }
+  .medium-import code {
+    background: #F3F0FF; color: var(--hedera-purple); padding: 2px 6px;
+    border-radius: 4px; font-size: 12px;
+  }
+  @media (max-width: 640px) {
+    .article-container { padding: 32px 16px 48px; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 20px; }
+    pre { padding: 16px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="article-container">
+  <a href="../" class="back-link">&larr; All posts</a>
+  <img class="cover-image" src="image-hedera-tags-and-gist-embed-test.png" alt="Hedera Tags and Gist Embed Test" />
+  <header class="article-header">
+    <span class="article-badge">Hedera Technical Deep Dive</span>
+    <h1>Hedera Tags and Gist Embed Test</h1>
+    <p class="subtitle">Verifying that tags pills render and code blocks become Gist embeds for Medium import.</p>
+    <p class="meta">Published April 14, 2026 &middot; Generated by HederaContentCreatorHelper</p>
+  </header>
+  <h1 id="hedera-tags-and-gist-embed-test">Hedera Tags and Gist Embed Test</h1>
+<p><em>Verifying that tags pills render and code blocks become Gist embeds for Medium import.</em></p>
+<h2 id="why-this-matters">Why this matters</h2>
+<p>Medium has two persistent pain points when importing technical content:</p>
+<ol>
+<li>Code blocks get flattened to single lines via the URL importer</li>
+<li>Tags must be added manually after each import</li>
+</ol>
+<p>This post tests both fixes simultaneously.</p>
+<h2 id="how-the-fix-works">How the fix works</h2>
+<p>When the blog has fenced code blocks, the publisher creates a GitHub Gist for each block and saves a parallel <code>-medium.md</code> file with Gist URLs in place of the original code.</p>
+<p>When you import the <code>-medium.md</code> file via Medium's importer, each Gist URL becomes a properly formatted, syntax-highlighted code embed.</p>
+<pre><code class="language-python">def fetch_hedera_balance(account_id: str) -&gt; int:
+    &quot;&quot;&quot;Fetch HBAR balance for a given Hedera account.&quot;&quot;&quot;
+    client = Client.for_mainnet()
+    query = AccountBalanceQuery().set_account_id(account_id)
+    response = query.execute(client)
+    return response.hbars.to_tinybars()
+</code></pre>
+<p>For JavaScript users, the SDK looks similar:</p>
+<pre><code class="language-javascript">import { Client, AccountBalanceQuery } from &quot;@hashgraph/sdk&quot;;
+
+const client = Client.forMainnet();
+const balance = await new AccountBalanceQuery()
+  .setAccountId(&quot;0.0.12345&quot;)
+  .execute(client);
+
+console.log(`Balance: ${balance.hbars.toString()}`);
+</code></pre>
+<h2 id="key-takeaways">Key takeaways</h2>
+<ul>
+<li>Code blocks now embed properly when imported to Medium via Gists</li>
+<li>Tags appear as pills at the bottom of the article</li>
+<li>The cover image is rendered above the title</li>
+<li>All steps are automated end-to-end in the weekly publisher</li>
+</ul>
+<h2 id="resources">Resources</h2>
+<ul>
+<li><a href="https://docs.hedera.com/hedera/sdks">Hedera SDK docs</a></li>
+<li><a href="https://medium.com/p/import">Medium import tool</a></li>
+</ul>
+  <div class="tags">
+    <span class="tag">hedera</span>
+    <span class="tag">hts</span>
+    <span class="tag">smart-contracts</span>
+    <span class="tag">web3</span>
+    <span class="tag">developer-tools</span>
+  </div>
+  <div class="medium-import">
+    <strong>Publishing to Medium?</strong> For best results with code blocks, use the <a href="hedera-tags-and-gist-embed-test-medium.md">Medium-friendly Markdown</a> (code blocks are pre-converted to embedded GitHub Gists). Paste it via <a href="https://medium.com/p/import">medium.com/p/import</a>.
+  </div>
+  <div class="article-footer">
+    <p>Generated by <a href="https://github.com/jmgomezl/HederaContentCreatorHelper">HederaContentCreatorHelper</a>
+    &mdash; Multi-agent CrewAI pipeline</p>
+  </div>
+</div>
+</body>
+</html>
