@@ -216,6 +216,109 @@ class TestDedupScenarios:
         assert len(fetched) == 1
         assert len(state["processed"]) == 1
 
+    def test_multiple_new_livestreams_all_published_uniquely(self, tmp_processed):
+        """Core guarantee: if the week brings multiple new livestreams, ALL are
+        published and NONE are duplicated."""
+        # 5 fresh livestreams this week
+        week_videos = [
+            {"video_id": f"week1-vid{i}", "title": f"Livestream {i}", "url": f"https://yt/{i}"}
+            for i in range(5)
+        ]
+
+        fetched, state = self._run(week_videos, limit=10)
+
+        # All 5 were processed
+        assert len(fetched) == 5
+        # Each video_id appears exactly once in fetched list
+        assert len(fetched) == len(set(fetched))
+        # All 5 are in the persisted state
+        assert set(state["processed"]) == {f"week1-vid{i}" for i in range(5)}
+
+    def test_mixed_new_and_already_processed(self, tmp_processed):
+        """Mix: 2 already-processed + 3 new. Only the 3 new should be published."""
+        all_videos = [
+            {"video_id": "old-1", "title": "Old 1", "url": "https://yt/old-1"},
+            {"video_id": "new-1", "title": "New 1", "url": "https://yt/new-1"},
+            {"video_id": "old-2", "title": "Old 2", "url": "https://yt/old-2"},
+            {"video_id": "new-2", "title": "New 2", "url": "https://yt/new-2"},
+            {"video_id": "new-3", "title": "New 3", "url": "https://yt/new-3"},
+        ]
+        fetched, state = self._run(
+            all_videos,
+            processed_ids=["old-1", "old-2"],
+            limit=10,
+        )
+        assert set(fetched) == {"new-1", "new-2", "new-3"}
+        assert "old-1" not in fetched
+        assert "old-2" not in fetched
+        # Final state has all 5 (old + new)
+        assert set(state["processed"]) == {"old-1", "old-2", "new-1", "new-2", "new-3"}
+
+    def test_crash_mid_loop_preserves_earlier_successes(self, tmp_processed):
+        """If processing crashes on video 3, videos 1 and 2 must still be saved."""
+        from scripts import weekly_publisher as wp
+
+        videos = [
+            {"video_id": "a", "title": "A", "url": "https://yt/a"},
+            {"video_id": "b", "title": "B", "url": "https://yt/b"},
+            {"video_id": "c", "title": "C", "url": "https://yt/c"},
+            {"video_id": "d", "title": "D", "url": "https://yt/d"},
+        ]
+
+        call_count = {"n": 0}
+
+        def crash_on_third(livestream, logger, dry_run=False):
+            call_count["n"] += 1
+            if call_count["n"] == 3:
+                raise RuntimeError("simulated crash on video C")
+            return True, f"https://example.com/{livestream['video_id']}.html"
+
+        with patch.object(wp, "fetch_hedera_livestreams", return_value=(videos, None)), \
+             patch.object(wp, "process_livestream", side_effect=crash_on_third), \
+             patch.object(wp, "send_telegram_notification"), \
+             patch.object(sys, "argv", ["weekly_publisher.py", "--limit", "10"]):
+            with pytest.raises(RuntimeError):
+                wp.main()
+
+        # After crash, processed.json should still have A and B (saved after each success)
+        state = wp.load_processed()
+        assert "a" in state["processed"]
+        assert "b" in state["processed"]
+        # C was never saved (crashed mid-process)
+        assert "c" not in state["processed"]
+        assert "d" not in state["processed"]
+
+    def test_rerun_after_crash_picks_up_where_it_left_off(self, tmp_processed):
+        """After a crash saving 2 of 4, next run processes the remaining 2."""
+        from scripts import weekly_publisher as wp
+
+        videos = [
+            {"video_id": "a", "title": "A", "url": "https://yt/a"},
+            {"video_id": "b", "title": "B", "url": "https://yt/b"},
+            {"video_id": "c", "title": "C", "url": "https://yt/c"},
+            {"video_id": "d", "title": "D", "url": "https://yt/d"},
+        ]
+
+        # Simulate a previous crash that saved a and b
+        wp.save_processed({"processed": ["a", "b"], "last_run": None})
+
+        fetched_now = []
+        def track(livestream, logger, dry_run=False):
+            fetched_now.append(livestream["video_id"])
+            return True, f"https://example.com/{livestream['video_id']}.html"
+
+        with patch.object(wp, "fetch_hedera_livestreams", return_value=(videos, None)), \
+             patch.object(wp, "process_livestream", side_effect=track), \
+             patch.object(wp, "send_telegram_notification"), \
+             patch.object(sys, "argv", ["weekly_publisher.py", "--limit", "10"]):
+            wp.main()
+
+        # Only c and d are processed (a, b already done)
+        assert set(fetched_now) == {"c", "d"}
+        # Final state has all 4
+        state = wp.load_processed()
+        assert set(state["processed"]) == {"a", "b", "c", "d"}
+
 
 # ─── process_livestream unit tests ──────────────────────────────────
 

@@ -20,7 +20,7 @@
         <string>/Users/juanma_bot/HederaContentCreatorHelper/.venv/bin/python</string>
         <string>/Users/juanma_bot/HederaContentCreatorHelper/scripts/weekly_publisher.py</string>
         <string>--limit</string>
-        <string>3</string>
+        <string>10</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict>
