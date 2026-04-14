@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.hedera.content.dashboard</string>
+    <key>WorkingDirectory</key>
+    <string>/Users/juanma_bot/HederaContentCreatorHelper</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/juanma_bot/HederaContentCreatorHelper/.venv/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PYTHONPATH</key>
+        <string>/Users/juanma_bot/HederaContentCreatorHelper/src</string>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/juanma_bot/HederaContentCreatorHelper/.venv/bin/python</string>
+        <string>-m</string>
+        <string>ui.app</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/juanma_bot/HederaContentCreatorHelper/logs/launchd-dashboard.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/juanma_bot/HederaContentCreatorHelper/logs/launchd-dashboard.stderr.log</string>
+</dict>
+</plist>

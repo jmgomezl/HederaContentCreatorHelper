@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.hedera.content.weekly</string>
+    <key>WorkingDirectory</key>
+    <string>/Users/juanma_bot/HederaContentCreatorHelper</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/juanma_bot/HederaContentCreatorHelper/.venv/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PYTHONPATH</key>
+        <string>/Users/juanma_bot/HederaContentCreatorHelper/src</string>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/juanma_bot/HederaContentCreatorHelper/.venv/bin/python</string>
+        <string>/Users/juanma_bot/HederaContentCreatorHelper/scripts/weekly_publisher.py</string>
+        <string>--limit</string>
+        <string>3</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>20</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/Users/juanma_bot/HederaContentCreatorHelper/logs/launchd-weekly.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/juanma_bot/HederaContentCreatorHelper/logs/launchd-weekly.stderr.log</string>
+</dict>
+</plist>
