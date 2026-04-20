@@ -17,6 +17,10 @@ build/
 *credentials*
 *secret*
 *.token
+# Browser cookies contain session tokens - treat as secret
+cookies.txt
+*.cookies.txt
+cookies/
 
 # Logs
 logs/

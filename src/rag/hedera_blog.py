@@ -123,26 +123,115 @@ def extract_video_id(url: str) -> str | None:
     return None
 
 
-def fetch_transcript(video_id: str) -> tuple[list[dict] | None, str | None]:
-    """Fetch the English transcript for the given video ID."""
-    transcript_list = None
-    list_error: Exception | None = None
+def _build_transcript_session(cookies_path: str | None = None):
+    """Build a requests.Session for YouTube transcript calls.
 
-    for target in (YouTubeTranscriptApi, YouTubeTranscriptApi()):
-        for method_name in ("list_transcripts", "list"):
-            if not hasattr(target, method_name):
+    If cookies_path is provided and exists, load those cookies into the session.
+    This bypasses IP-based rate limits by authenticating as a logged-in user.
+
+    The cookies file must be in Netscape (cookies.txt) format, which can be
+    exported from any browser with an extension like "Get cookies.txt LOCALLY".
+    """
+    import requests
+    session = requests.Session()
+    # Use a realistic browser User-Agent to avoid trivial bot blocks
+    session.headers.update({
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/131.0.0.0 Safari/537.36"
+        ),
+        "Accept-Language": "en-US,en;q=0.9",
+    })
+
+    if cookies_path and os.path.isfile(cookies_path):
+        try:
+            from http.cookiejar import MozillaCookieJar
+            jar = MozillaCookieJar(cookies_path)
+            jar.load(ignore_discard=True, ignore_expires=True)
+            session.cookies = jar
+        except Exception as exc:  # noqa: BLE001
+            # If cookies fail to load, fall back to anonymous session
+            import logging
+            logging.getLogger(__name__).warning(
+                "Failed to load YouTube cookies from %s: %s", cookies_path, exc,
+            )
+
+    return session
+
+
+def _is_ip_blocked_error(error_msg: str) -> bool:
+    """Detect YouTube IP block / rate-limit errors from exception messages."""
+    lower = error_msg.lower()
+    return any(phrase in lower for phrase in (
+        "ipblocked",
+        "requestblocked",
+        "blocking requests from your ip",
+        "too many requests",
+        "429",
+    ))
+
+
+def fetch_transcript(
+    video_id: str,
+    cookies_path: str | None = None,
+    max_retries: int = 3,
+) -> tuple[list[dict] | None, str | None]:
+    """Fetch the English transcript for the given video ID.
+
+    Args:
+        video_id: 11-character YouTube video ID.
+        cookies_path: Optional path to a Netscape-format cookies.txt file.
+            If set, requests use those cookies to authenticate as a logged-in
+            YouTube user - this bypasses IP-based rate limits.
+            Defaults to env var YOUTUBE_COOKIES_PATH if set.
+        max_retries: Number of retry attempts for transient errors (rate limits).
+
+    Returns:
+        tuple: (transcript_entries, error_message)
+    """
+    import time
+
+    # Fall back to env var for cookies path
+    if cookies_path is None:
+        cookies_path = os.getenv("YOUTUBE_COOKIES_PATH") or None
+
+    # Build an API client with optional cookies session
+    session = _build_transcript_session(cookies_path)
+    try:
+        api = YouTubeTranscriptApi(http_client=session)
+    except TypeError:
+        # Older library version without http_client param
+        api = YouTubeTranscriptApi()
+
+    last_error: Exception | None = None
+
+    for attempt in range(max_retries + 1):
+        # Step 1: List available transcripts
+        try:
+            transcript_list = api.list(video_id)
+        except Exception as exc:  # noqa: BLE001
+            last_error = exc
+            error_str = str(exc)
+            if _is_ip_blocked_error(error_str) and attempt < max_retries:
+                # Exponential backoff: 4s, 16s, 64s
+                wait = 4 * (4 ** attempt)
+                time.sleep(wait)
                 continue
-            try:
-                transcript_list = getattr(target, method_name)(video_id)
-                break
-            except Exception as exc:  # noqa: BLE001
-                list_error = exc
-        if transcript_list is not None:
-            break
+            if _is_ip_blocked_error(error_str):
+                hint = (
+                    "\n\nYouTube is blocking this IP. To fix:\n"
+                    "1. Install a browser extension like 'Get cookies.txt LOCALLY'\n"
+                    "2. While logged into youtube.com, export cookies as cookies.txt\n"
+                    "3. Set YOUTUBE_COOKIES_PATH=/path/to/cookies.txt in .env\n"
+                    "4. Retry the request"
+                )
+                return None, f"YouTube IP-blocked: {error_str[:200]}{hint}"
+            return None, f"Unable to access transcripts for this video: {error_str[:300]}"
 
-    if transcript_list is not None:
+        # Step 2: Find an English transcript (prefer manually-created)
+        transcript = None
         if hasattr(transcript_list, "find_manually_created_transcript"):
-            transcript = None
             try:
                 transcript = transcript_list.find_manually_created_transcript(["en"])
             except Exception:
@@ -153,49 +242,35 @@ def fetch_transcript(video_id: str) -> tuple[list[dict] | None, str | None]:
                         transcript = transcript_list.find_transcript(["en"])
                     except Exception:
                         transcript = None
-            if transcript is None:
-                return None, "No English transcript is available for this video."
+        else:
+            # Fallback for older API surface
             try:
-                return transcript.fetch(), None
-            except Exception as exc:  # noqa: BLE001
-                return None, f"Unable to fetch the transcript: {exc}"
+                for t in transcript_list:
+                    if getattr(t, "language_code", None) != "en":
+                        continue
+                    if transcript is None or not getattr(t, "is_generated", True):
+                        transcript = t
+                        if not getattr(t, "is_generated", True):
+                            break
+            except Exception:
+                transcript = None
 
-        # Fallback: iterate transcript objects like the older API.
-        selected = None
-        try:
-            for t in transcript_list:
-                language_code = getattr(t, "language_code", None)
-                is_generated = getattr(t, "is_generated", None)
-                if language_code != "en":
-                    continue
-                if selected is None or not is_generated:
-                    selected = t
-                    if not is_generated:
-                        break
-        except Exception:
-            selected = None
-
-        if selected is None:
+        if transcript is None:
             return None, "No English transcript is available for this video."
+
+        # Step 3: Fetch the actual transcript content
         try:
-            return selected.fetch(), None
+            return transcript.fetch(), None
         except Exception as exc:  # noqa: BLE001
-            return None, f"Unable to fetch the transcript: {exc}"
+            last_error = exc
+            error_str = str(exc)
+            if _is_ip_blocked_error(error_str) and attempt < max_retries:
+                wait = 4 * (4 ** attempt)
+                time.sleep(wait)
+                continue
+            return None, f"Unable to fetch the transcript: {error_str[:300]}"
 
-    # Final fallback: direct get_transcript if available.
-    last_error: Exception | None = None
-    for target in (YouTubeTranscriptApi, YouTubeTranscriptApi()):
-        if hasattr(target, "get_transcript"):
-            try:
-                return target.get_transcript(video_id, languages=["en"]), None
-            except Exception as exc:  # noqa: BLE001
-                last_error = exc
-
-    if last_error:
-        return None, f"Unable to fetch the transcript: {last_error}"
-    if list_error:
-        return None, f"Unable to access transcripts for this video: {list_error}"
-    return None, "Unable to access transcripts (youtube-transcript-api is likely outdated)."
+    return None, f"Transcript fetch failed after {max_retries} retries: {last_error}"
 
 
 def format_transcript(entries: Iterable[dict], include_timestamps: bool = False) -> str:
