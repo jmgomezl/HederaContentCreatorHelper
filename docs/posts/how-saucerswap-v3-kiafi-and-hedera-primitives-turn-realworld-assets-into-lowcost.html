@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How SaucerSwap V3, KiaFi, and Hedera Primitives Turn Real‑World Assets into Low‑Cost, Auditable On‑Chain Flows</title>
+<meta name="description" content="A developer‑grade breakdown of SaucerSwap’s hybrid order‑book, Kia (Gear Credit)’s AI+HTS invoice tokenization, and the Hedera primitives (HTS, HCS, HBAR, EVM) you should pick for settlement, auditability, and micro‑payments.">
+<meta property="og:title" content="How SaucerSwap V3, KiaFi, and Hedera Primitives Turn Real‑World Assets into Low‑Cost, Auditable On‑Chain Flows">
+<meta property="og:description" content="A developer‑grade breakdown of SaucerSwap’s hybrid order‑book, Kia (Gear Credit)’s AI+HTS invoice tokenization, and the Hedera primitives (HTS, HCS, HBAR, EVM) you should pick for settlement, auditability, and micro‑payments.">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://jmgomezl.github.io/HederaContentCreatorHelper/posts/image-how-saucerswap-v3-kiafi-and-hedera-primitives-turn-realworld-assets-into-lowcost.png">
+<meta name="twitter:image" content="https://jmgomezl.github.io/HederaContentCreatorHelper/posts/image-how-saucerswap-v3-kiafi-and-hedera-primitives-turn-realworld-assets-into-lowcost.png">
+<meta name="keywords" content="hedera, hts, hcs, saucerswap, smart-contracts">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --hedera-purple: #8259EF; --hedera-purple-light: #A78BFA;
+    --hedera-purple-bg: #F5F0FF; --hedera-dark: #1A1A2E;
+    --text-primary: #1F2937; --text-secondary: #4B5563;
+    --text-muted: #6B7280; --border: #E5E7EB;
+    --bg-code: #F8F7FC; --bg-white: #FFFFFF;
+    --accent-green: #10B981;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-primary); background: #F9FAFB;
+    line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  .article-container {
+    max-width: 780px; margin: 0 auto; padding: 60px 24px 80px;
+    background: var(--bg-white); min-height: 100vh;
+    box-shadow: 0 0 40px rgba(0,0,0,0.04);
+  }
+  .article-header {
+    margin-bottom: 48px; padding-bottom: 32px;
+    border-bottom: 3px solid var(--hedera-purple);
+  }
+  .cover-image {
+    width: 100%; height: auto; border-radius: 12px;
+    margin-bottom: 32px; box-shadow: 0 8px 32px rgba(130,89,239,0.2);
+    display: block;
+  }
+  .article-badge {
+    display: inline-block; background: var(--hedera-purple); color: white;
+    font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+    text-transform: uppercase; padding: 4px 12px; border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 32px; font-weight: 700; line-height: 1.25;
+    color: var(--hedera-dark); margin-bottom: 16px; letter-spacing: -0.5px;
+  }
+  .subtitle {
+    font-size: 18px; font-style: italic; color: var(--text-secondary);
+    line-height: 1.6; border-left: 3px solid var(--hedera-purple-light);
+    padding-left: 16px;
+  }
+  .meta { font-size: 13px; color: var(--text-muted); margin-top: 16px; }
+  h2 {
+    font-size: 24px; font-weight: 700; color: var(--hedera-dark);
+    margin: 48px 0 16px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--hedera-purple-bg); letter-spacing: -0.3px;
+  }
+  h3 {
+    font-size: 18px; font-weight: 600; color: var(--hedera-purple);
+    margin: 32px 0 12px;
+  }
+  p { margin-bottom: 16px; font-size: 16px; }
+  ul, ol { margin: 12px 0 20px 24px; }
+  li { margin-bottom: 8px; font-size: 15px; line-height: 1.65; }
+  li::marker { color: var(--hedera-purple); }
+  code {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    background: var(--hedera-purple-bg); color: var(--hedera-purple);
+    padding: 2px 6px; border-radius: 4px; font-weight: 500;
+  }
+  pre {
+    background: var(--hedera-dark); color: #E2E8F0; border-radius: 10px;
+    padding: 24px; margin: 20px 0; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    line-height: 1.7; border: 1px solid #2D2D44;
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; font-size: 13px;
+  }
+  a { color: var(--hedera-purple); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back-link {
+    display: inline-block; margin-bottom: 24px; font-size: 14px;
+    color: var(--hedera-purple);
+  }
+  .article-footer {
+    margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border);
+    text-align: center; color: var(--text-muted); font-size: 13px;
+  }
+  .tags {
+    margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .tag {
+    display: inline-block; padding: 6px 14px; border-radius: 999px;
+    background: var(--hedera-purple-bg); color: var(--hedera-purple);
+    font-size: 13px; font-weight: 500; text-decoration: none;
+  }
+  .medium-import {
+    margin-top: 24px; padding: 16px 20px;
+    background: var(--bg-callout, #FAFAFE); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px; color: var(--text-secondary);
+  }
+  .medium-import a { color: var(--hedera-purple); }
+  .medium-import code {
+    background: #F3F0FF; color: var(--hedera-purple); padding: 2px 6px;
+    border-radius: 4px; font-size: 12px;
+  }
+  @media (max-width: 640px) {
+    .article-container { padding: 32px 16px 48px; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 20px; }
+    pre { padding: 16px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="article-container">
+  <a href="../" class="back-link">&larr; All posts</a>
+  <img class="cover-image" src="image-how-saucerswap-v3-kiafi-and-hedera-primitives-turn-realworld-assets-into-lowcost.png" alt="How SaucerSwap V3, KiaFi, and Hedera Primitives Turn Real‑World Assets into Low‑Cost, Auditable On‑Chain Flows" />
+  <header class="article-header">
+    <span class="article-badge">Hedera Technical Deep Dive</span>
+    <h1>How SaucerSwap V3, KiaFi, and Hedera Primitives Turn Real‑World Assets into Low‑Cost, Auditable On‑Chain Flows</h1>
+    <p class="subtitle">A developer‑grade breakdown of SaucerSwap’s hybrid order‑book, Kia (Gear Credit)’s AI+HTS invoice tokenization, and the Hedera primitives (HTS, HCS, HBAR, EVM) you should pick for settlement, auditability, and micro‑payments.</p>
+    <p class="meta">Published April 20, 2026 &middot; Generated by HederaContentCreatorHelper</p>
+  </header>
+  <h1 id="how-saucerswap-v3-kiafi-and-hedera-primitives-turn-realworld-assets-into-lowcost-auditable-onchain-flows">How SaucerSwap V3, KiaFi, and Hedera Primitives Turn Real‑World Assets into Low‑Cost, Auditable On‑Chain Flows</h1>
+<p><em>A developer‑grade breakdown of SaucerSwap’s hybrid order‑book, Kia (Gear Credit)’s AI+HTS invoice tokenization, and the Hedera primitives (HTS, HCS, HBAR, EVM) you should pick for settlement, auditability, and micro‑payments.</em></p>
+<h2 id="introduction-why-this-matters-now">Introduction — why this matters now</h2>
+<p>Hedera’s stack is moving from proof‑of‑concept tokenization to production patterns: a DEX that combines order books with AMMs, a credit product minting business invoices on HTS and underwriting them with an AI + human workflow, and explicit engineering tradeoffs for using HCS vs HTS vs HBAR for settlement. If you build tokenized credit, on‑chain collateral, or automated liquidity strategies, the concrete numbers and architecture decisions discussed in the community call let you design compatible systems today instead of guessing on fees, routing, or audit trails.</p>
+<h2 id="tldr-actionable">TL;DR (actionable)</h2>
+<ul>
+<li>Implement HTS for tokenized invoices and programmable compliance (freeze/KYC/wipe); verify current USD‑denominated fees via Hedera’s Fee Calculator before production.</li>
+<li>Build SaucerSwap integration to route between V3 maker intents and V2/V1 AMM pools. Treat maker intents as off‑chain signed orders; makers pay 0 bps; takers pay 5–15 bps; AMM swap smart‑contract fee is 0.3% (25 bps → LPs, 5 bps → platform).</li>
+<li>Use HCS to record ordered settlement events and to coordinate PSP integrations for cross‑border flows; use HBAR for very high‑frequency micropayments because native HBAR transfers are roughly an order of magnitude cheaper than typical token transfers in practice (confirm with Fee Calculator).</li>
+<li>Start AI‑driven vault strategies with strict caps, human overrides, and HCS‑backed audit logs; treat agent automation as experimental and require third‑party audits.</li>
+</ul>
+<h2 id="section-map">Section map</h2>
+<ul>
+<li>SaucerSwap architecture &amp; fees  </li>
+<li>KiaFi (Gear Credit) tokenization and underwriting  </li>
+<li>Hedera primitives and when to use each  </li>
+<li>Vaults, AI agents, and safety</li>
+</ul>
+<hr />
+<h2 id="saucerswap-v1-v2-v3-hybrid-routing-fee-math-and-operational-hooks">SaucerSwap V1 → V2 → V3: hybrid routing, fee math, and operational hooks</h2>
+<h3 id="liquidity-models">Liquidity models</h3>
+<p>SaucerSwap supports three liquidity models you must route between when building integrations:</p>
+<ul>
+<li>V1: classic constant‑product AMM — LPs deposit equal‑value token pairs; pool covers price ratios between assets.</li>
+<li>V2: concentrated liquidity (Uniswap V3 style) — LPs pick a price range (A → B) to concentrate liquidity near market price; enables single‑sided exposure.</li>
+<li>V3: club / central limit order book (CLOB) model — accepts signed maker intents off‑chain. Makers sign an order intent that can be canceled without cost; makers pay 0 bps on fill. Takers pay 5–15 bps. If V3 price crosses a V1/V2 pool price, execution routes to the AMM pools for fills.</li>
+</ul>
+<p>This hybrid routing creates internal arbitrage opportunities and guaranteed liquidity for fills.</p>
+<h3 id="concrete-fee-accounting-you-must-implement">Concrete fee accounting you must implement</h3>
+<ul>
+<li>Smart‑contract AMM swap fee: 0.3% (30 bps) per swap. Allocation: 25 bps to LPs, 5 bps to the platform.</li>
+<li>Website interface fee (using SaucerSwap web UI): +0.25% (25 bps) on top of the smart‑contract fee.</li>
+<li>Mobile app interface fee (white‑labeled wallet): 0% interface fee — users pay only the smart‑contract fee (0.3%).</li>
+<li>V3 maker/taker split: maker = 0 bps on fill; taker = 5–15 bps on execution.</li>
+</ul>
+<h3 id="integration-notes-for-engineers">Integration notes for engineers</h3>
+<ul>
+<li>Preserve signed intents offline or in a signed‑intent store and expose a cancel endpoint; do not charge makers until on‑chain execution.</li>
+<li>Aggregator/routing logic should decide between matching V3 book fills, executing V2 concentrated liquidity swaps, or falling back to V1 pools; monitor spreads and implement internal arbitrage capture if profitable.</li>
+<li>Track three fee layers in accounting: contract fee (0.3%), optional interface fee (0.25% on web), and maker/taker settlement in V3. Mobile flows should skip interface fee application.</li>
+<li>Incentives: V2 concentrated liquidity gets “Larry” rewards paid in two‑week epochs; coordinate LP incentive monitoring and distribution with SaucerSwap’s treasury rules.</li>
+</ul>
+<hr />
+<h2 id="kia-gear-credit-kiafi-ai-underwriting-hts-invoice-tokenization-and-settlement-rails">Kia (Gear Credit / KiaFi): AI underwriting, HTS invoice tokenization, and settlement rails</h2>
+<blockquote>
+<p>Naming and verification note: the speaker introduced the company as Gear Credit and the product as Kia / KiaFi. Confirm brand and legal entity naming before publication.</p>
+</blockquote>
+<h3 id="highlevel-flow-and-primitives">High‑level flow and primitives</h3>
+<ul>
+<li>Data ingestion: SMEs upload bank statements, invoices, royalties, and other trade instruments.</li>
+<li>AI first pass: KiaFi runs documents through 200+ risk signals and returns a first‑level underwriting decision in under 15 seconds.</li>
+<li>Human sign‑off: a manual underwriter finalizes a full risk assessment within 48–72 hours — humans remain in the loop for pricing and settlement decisions.</li>
+<li>Tokenization &amp; collateral: approved receivables are minted as HTS tokens (invoice tokens) with programmable compliance flags; HTS tokens serve as on‑chain collateral escrowed under smart contracts.</li>
+</ul>
+<h3 id="operational-numbers-from-the-call">Operational numbers (from the call)</h3>
+<ul>
+<li>Tokenized volume: &gt; $3,000,000 in SME invoices tokenized since March, fully funded at time of the call.</li>
+<li>Borrower / lender counts: 64 borrowers, 85 registered lenders.</li>
+<li>Pipeline: &gt; $30,000,000 shortlisted deal flow; Kia ranked 7th on DeFi Llama at the time (aiming for 5th).</li>
+</ul>
+<h3 id="settlement-rails-and-product-roadmap">Settlement rails and product roadmap</h3>
+<ul>
+<li>H‑bridge: building an exclusive native Hedera bridge (“H‑bridge”) to move assets into Hedera at lower cost; confirm bridge design and security review details before production.</li>
+<li>Flo (FLO): a spendable layer intended to work with Visa rails. Phase 1 framed as a charge card for businesses to spend borrowed capital; Phase 2 as borrowing against on‑chain positions. Treat Visa integration as an intended integration — confirm with partners.</li>
+<li>HCS usage: Kia discussed using the Hedera Consensus Service for cross‑border settlement coordination with PSPs in Pakistan and Bangladesh; HCS can supply ordered, auditable settlement records while HBAR can act as a low‑latency settlement medium with ~3–5 second finality.</li>
+</ul>
+<h3 id="developer-guidance-and-security-model">Developer guidance and security model</h3>
+<ul>
+<li>Use HTS features (mint, freeze, KYC flags, programmatic compliance) to implement escrow and automatic liquidation logic. Verify USD‑denominated fees in Hedera’s Fee Calculator.</li>
+<li>Record AI decisions or settlement steps to HCS when you need tamper‑evident ordering and timestamps. HCS is suitable for verifiable consensus timestamps without storing full payloads on‑chain.</li>
+<li>Smart contracts should implement clear collateral‑release logic; the call cited an example overcollateralization of ~170% and lender yields of 8–15% APY — present these as speaker examples, not financial advice.</li>
+<li>Maintain human‑in‑the‑loop controls for underwriting, drawdowns, and emergency freezes.</li>
+</ul>
+<hr />
+<h2 id="hedera-primitives-when-to-use-hts-hcs-hbar-and-smart-contracts-evm">Hedera primitives: when to use HTS, HCS, HBAR, and Smart Contracts (EVM)</h2>
+<p>Pick Hedera primitives based on cost, auditability, and programmability. Confirm fee figures via Hedera’s Fee Calculator before production.</p>
+<h3 id="hts-native-token-issuance-and-compliance">HTS — native token issuance and compliance</h3>
+<ul>
+<li>Use HTS to mint fungible or non‑fungible tokens without deploying a contract. HTS supports adjustable supply, freeze/wipe, and account KYC flags.</li>
+<li>HTS is appropriate for tokenized invoices, tokenized equities (using Asset Tokenization Studio patterns), and assets requiring programmatic administrative operations.</li>
+<li>Hedera documents fixed USD fees for HTS operations (sample token transfer fees are small; verify exact values in the Fee Calculator).</li>
+</ul>
+<h3 id="hcs-ordered-messages-and-settlement-records">HCS — ordered messages and settlement records</h3>
+<ul>
+<li>Use HCS when you need verifiable ordering and audit trails (PSP settlement messages, auction order logs, cross‑border coordination).</li>
+<li>HCS is a notarization layer: record hashes or summaries and rely on the consensus timestamp for ordering and dispute resolution.</li>
+</ul>
+<h3 id="hbar-transfers-microsettlements-and-agent-economies">HBAR transfers — micro‑settlements and agent economies</h3>
+<ul>
+<li>The call contrasted token transfer cost (~0.1¢) with HBAR transfer cost (~0.01¢), suggesting HBAR is an inexpensive rail for high‑frequency, low‑value transfers between agents.</li>
+<li>Use HBAR as the settlement leg for extremely low per‑transfer costs (micropayments between AI agents or frequent off‑chain coordination).</li>
+<li>Always verify HBAR conversion to USD and per‑transaction fees via the Fee Calculator.</li>
+</ul>
+<h3 id="smart-contracts-evm-programmability-and-gas-capacity">Smart Contracts / EVM — programmability and gas capacity</h3>
+<ul>
+<li>Hedera’s Smart Contract Service runs an EVM client and supports Solidity contracts for composability beyond HTS admin features.</li>
+<li>The ecosystem is testing EVM capacity; the speaker referenced a 150 million gas baseline and an ambitious target ~1 billion gas — treat these as speaker observations and confirm with Hedera engineering docs.</li>
+<li>For DEXs and high throughput matching, design contracts and off‑chain matching to be modular to take advantage of higher gas ceilings when available.</li>
+</ul>
+<hr />
+<h2 id="vaults-ai-agents-automation-and-the-safety-checklist">Vaults, AI agents, automation, and the safety checklist</h2>
+<h3 id="what-vaults-do">What vaults do</h3>
+<ul>
+<li>Vaults are smart‑contract strategies that automatically rebalance concentrated liquidity when price moves out of range.</li>
+<li>Strategies include migrating liquidity to a new range, compounding fees, or rebalancing between single‑sided and balanced positions.</li>
+</ul>
+<h3 id="ai-agents-opportunities-and-risks">AI agents — opportunities and risks</h3>
+<ul>
+<li>Use cases: predict short‑term range shifts, optimize fee capture, programmatically rebalance vault allocations.</li>
+<li>Risks: automated strategies may execute at scale and amplify errors or oracle issues. Agentic vaults are experimental.</li>
+</ul>
+<h3 id="safety-checklist-before-deploying-agentic-vaults">Safety checklist before deploying agentic vaults</h3>
+<ul>
+<li>Limit exposure: cap TVL per strategy and impose per‑strategy withdrawal limits.</li>
+<li>Require human overrides: provide multisig or governance emergency pause and manual rollback procedures.</li>
+<li>Audit and test: obtain third‑party audits and run multi‑month simulations against historical data.</li>
+<li>Log actions to HCS: use HCS to record agent decisions and rebalances for an ordered, auditable trail.</li>
+<li>Start with opt‑in governance: require user consent to delegate funds to agentic vaults and be explicit about strategy parameters and risk.</li>
+</ul>
+<hr />
+<h2 id="key-takeaways-short-checklist">Key takeaways (short checklist)</h2>
+<ul>
+<li>Map tokenized real‑world assets to HTS for compliance and admin ops; use HCS for auditable settlement records; use HBAR when you need the lowest per‑transfer cost for micropayments.</li>
+<li>Integrate with SaucerSwap V3 by handling signed maker intents off‑chain, routing taker flows into V2/V1 if needed, and accounting for 0.3% smart‑contract swap fee + optional 0.25% web interface fee (mobile = 0% interface fee).</li>
+<li>Treat AI agents and vault automation as experimental: cap funds, require manual overrides, and log all actions to HCS.</li>
+<li>Watch EVM gas roadmap and X402 v2 PRs for cross‑protocol compatibility and higher throughput ceilings; confirm roadmap claims with official Hedera engineering sources.</li>
+</ul>
+<hr />
+<h2 id="verification-flags-and-items-to-confirm-before-publishing-or-production">Verification flags and items to confirm before publishing or production</h2>
+<ul>
+<li>Company/brand names: confirm official branding/legal entity for Gear Credit / Kia / KiaFi.</li>
+<li>Project names: confirm official name and spec for the EVM scaling project referenced as “Project Bonneville / Bonnevile”.</li>
+<li>Transcript artifacts: verify unclear tokens or project spellings (examples like “USDT zero”, “Bonzo/Bonzai”).</li>
+<li>Exact fee conversions: call gave rough per‑transfer comparisons (HTS ~0.1¢, HBAR ~0.01¢). Always cite the Hedera Fee Calculator for current USD fees and include the verification timestamp.</li>
+<li>Third‑party integrations (Visa, exchanges): treat these as planned or speaker statements and confirm directly with vendors before presenting as partnerships.</li>
+</ul>
+<hr />
+<h2 id="closing-what-to-do-next-specific-cta">Closing — what to do next (specific CTA)</h2>
+<ol>
+<li>Verify feed numbers: check Hedera Fee Calculator and Smart Contract Service docs for current fees and gas limits before deploying.</li>
+<li>Prototype: deploy an HTS invoice token on Hedera testnet, record an AI underwriting summary hash to HCS, and implement a simple escrow smart contract that releases collateral on default.</li>
+<li>Integrate SaucerSwap flows: build a front end that signs maker intents off‑chain, supports cancellation, and routes taker swaps to V2/V1 fallback when necessary.</li>
+<li>Attend the calls and events: Seal Coin CTO on the Hedera technical community call (speaker referenced dates); Hedera Con Miami and the Hedera Community Hub for coordination and SDK resources.</li>
+<li>Join the code review: review the X402 v2 PR that adds Hedera spec and follow EVM scaling updates if your product needs higher gas ceilings.</li>
+</ol>
+<hr />
+<h2 id="resources-authoritative-links-to-verify-and-build">Resources (authoritative links to verify and build)</h2>
+<ul>
+<li>Hedera Token Service (HTS): https://hedera.com/learning/service/token-service/  </li>
+<li>Hedera Consensus Service (HCS): https://hedera.com/learning/consensus/service/consensus-service/  </li>
+<li>Hedera Smart Contract Service / EVM: https://hedera.com/learning/service/smart-contract-service/  </li>
+<li>Hedera Fee Calculator &amp; Stablecoin Studio: https://hedera.com/learning/tokens/  </li>
+<li>Asset Tokenization Studio: https://hedera.com/learning/service/token-service/  </li>
+<li>Hedera blog &amp; learning center: https://hedera.com/blog and https://hedera.com/learning</li>
+</ul>
+<hr />
+<p>If you want, I will:
+- Expand one section into a developer quick‑start (HTS mint + HCS audit record + Solidity escrow contract example), or
+- Produce a SaucerSwap V3 integrator guide with signed‑intent API semantics, routing pseudocode, and test vectors.</p>
+<p>Tell me which one to expand and I’ll draft the developer guide with exact API calls, contract interfaces, and verification checkpoints.</p>
+  <div class="tags">
+    <span class="tag">hedera</span>
+    <span class="tag">hts</span>
+    <span class="tag">hcs</span>
+    <span class="tag">saucerswap</span>
+    <span class="tag">smart-contracts</span>
+  </div>
+  
+  <div class="article-footer">
+    <p>Generated by <a href="https://github.com/jmgomezl/HederaContentCreatorHelper">HederaContentCreatorHelper</a>
+    &mdash; Multi-agent CrewAI pipeline</p>
+  </div>
+</div>
+</body>
+</html>
