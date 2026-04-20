@@ -151,19 +151,20 @@ publishing_task:
 
     Output format: {output_format}
 
-    OUTPUT EXACTLY in this format (with the separators verbatim):
+    OUTPUT EXACTLY in this format (the three dash separators must appear
+    on their own lines verbatim):
 
-    {{the final blog content}}
+    <the final blog content>
     ---TITLES---
-    {{title 1}}
-    {{title 2}}
+    <title 1>
+    <title 2>
     ...
     ---TAGS---
-    {{tag1}}
-    {{tag2}}
-    {{tag3}}
-    {{tag4}}
-    {{tag5}}
+    <tag1>
+    <tag2>
+    <tag3>
+    <tag4>
+    <tag5>
   expected_output: >
     The final formatted blog post followed by ---TITLES--- (with title
     suggestions, one per line), followed by ---TAGS--- (with exactly 5 tags,
