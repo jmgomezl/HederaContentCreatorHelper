@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Hedera Builders Shipped This Quarter: SaucerSwap V3, Kia Tokenization, H‑bridge — and the primitives engineers will reuse</title>
+<meta name="description" content="Hedera technical blog post about What Hedera Builders Shipped This Quarter: SaucerSwap V3, Kia Tokenization, H‑bridge — and the primitives engineers will reuse">
+<meta property="og:title" content="What Hedera Builders Shipped This Quarter: SaucerSwap V3, Kia Tokenization, H‑bridge — and the primitives engineers will reuse">
+<meta property="og:description" content="Hedera technical blog post about What Hedera Builders Shipped This Quarter: SaucerSwap V3, Kia Tokenization, H‑bridge — and the primitives engineers will reuse">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://jmgomezl.github.io/HederaContentCreatorHelper/posts/image-what-hedera-builders-shipped-this-quarter-saucerswap-v3-kia-tokenization-hbridge.png">
+<meta name="twitter:image" content="https://jmgomezl.github.io/HederaContentCreatorHelper/posts/image-what-hedera-builders-shipped-this-quarter-saucerswap-v3-kia-tokenization-hbridge.png">
+<meta name="keywords" content="hedera, hts, hcs, evm, smart-contracts">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --hedera-purple: #8259EF; --hedera-purple-light: #A78BFA;
+    --hedera-purple-bg: #F5F0FF; --hedera-dark: #1A1A2E;
+    --text-primary: #1F2937; --text-secondary: #4B5563;
+    --text-muted: #6B7280; --border: #E5E7EB;
+    --bg-code: #F8F7FC; --bg-white: #FFFFFF;
+    --accent-green: #10B981;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-primary); background: #F9FAFB;
+    line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  .article-container {
+    max-width: 780px; margin: 0 auto; padding: 60px 24px 80px;
+    background: var(--bg-white); min-height: 100vh;
+    box-shadow: 0 0 40px rgba(0,0,0,0.04);
+  }
+  .article-header {
+    margin-bottom: 48px; padding-bottom: 32px;
+    border-bottom: 3px solid var(--hedera-purple);
+  }
+  .cover-image {
+    width: 100%; height: auto; border-radius: 12px;
+    margin-bottom: 32px; box-shadow: 0 8px 32px rgba(130,89,239,0.2);
+    display: block;
+  }
+  .article-badge {
+    display: inline-block; background: var(--hedera-purple); color: white;
+    font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+    text-transform: uppercase; padding: 4px 12px; border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 32px; font-weight: 700; line-height: 1.25;
+    color: var(--hedera-dark); margin-bottom: 16px; letter-spacing: -0.5px;
+  }
+  .subtitle {
+    font-size: 18px; font-style: italic; color: var(--text-secondary);
+    line-height: 1.6; border-left: 3px solid var(--hedera-purple-light);
+    padding-left: 16px;
+  }
+  .meta { font-size: 13px; color: var(--text-muted); margin-top: 16px; }
+  h2 {
+    font-size: 24px; font-weight: 700; color: var(--hedera-dark);
+    margin: 48px 0 16px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--hedera-purple-bg); letter-spacing: -0.3px;
+  }
+  h3 {
+    font-size: 18px; font-weight: 600; color: var(--hedera-purple);
+    margin: 32px 0 12px;
+  }
+  p { margin-bottom: 16px; font-size: 16px; }
+  ul, ol { margin: 12px 0 20px 24px; }
+  li { margin-bottom: 8px; font-size: 15px; line-height: 1.65; }
+  li::marker { color: var(--hedera-purple); }
+  code {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    background: var(--hedera-purple-bg); color: var(--hedera-purple);
+    padding: 2px 6px; border-radius: 4px; font-weight: 500;
+  }
+  pre {
+    background: var(--hedera-dark); color: #E2E8F0; border-radius: 10px;
+    padding: 24px; margin: 20px 0; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    line-height: 1.7; border: 1px solid #2D2D44;
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; font-size: 13px;
+  }
+  a { color: var(--hedera-purple); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back-link {
+    display: inline-block; margin-bottom: 24px; font-size: 14px;
+    color: var(--hedera-purple);
+  }
+  .article-footer {
+    margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border);
+    text-align: center; color: var(--text-muted); font-size: 13px;
+  }
+  .tags {
+    margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .tag {
+    display: inline-block; padding: 6px 14px; border-radius: 999px;
+    background: var(--hedera-purple-bg); color: var(--hedera-purple);
+    font-size: 13px; font-weight: 500; text-decoration: none;
+  }
+  .medium-import {
+    margin-top: 24px; padding: 16px 20px;
+    background: var(--bg-callout, #FAFAFE); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px; color: var(--text-secondary);
+  }
+  .medium-import a { color: var(--hedera-purple); }
+  .medium-import code {
+    background: #F3F0FF; color: var(--hedera-purple); padding: 2px 6px;
+    border-radius: 4px; font-size: 12px;
+  }
+  @media (max-width: 640px) {
+    .article-container { padding: 32px 16px 48px; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 20px; }
+    pre { padding: 16px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="article-container">
+  <a href="../" class="back-link">&larr; All posts</a>
+  <img class="cover-image" src="image-what-hedera-builders-shipped-this-quarter-saucerswap-v3-kia-tokenization-hbridge.png" alt="What Hedera Builders Shipped This Quarter: SaucerSwap V3, Kia Tokenization, H‑bridge — and the primitives engineers will reuse" />
+  <header class="article-header">
+    <span class="article-badge">Hedera Technical Deep Dive</span>
+    <h1>What Hedera Builders Shipped This Quarter: SaucerSwap V3, Kia Tokenization, H‑bridge — and the primitives engineers will reuse</h1>
+    
+    <p class="meta">Published April 24, 2026 &middot; Generated by HederaContentCreatorHelper</p>
+  </header>
+  <h1 id="what-hedera-builders-shipped-this-quarter-saucerswap-v3-kia-tokenization-hbridge-and-the-primitives-engineers-will-reuse">What Hedera Builders Shipped This Quarter: SaucerSwap V3, Kia Tokenization, H‑bridge — and the primitives engineers will reuse</h1>
+<p>A technical map for engineers — how SaucerSwap’s AMM→CLOB hybrid and Kia’s invoice tokenization stack reuse Hedera primitives (HTS, HCS, Cryptocurrency Service, EVM) to deliver low‑cost, enterprise‑grade products today.</p>
+<h2 id="introduction-why-this-matters-now">Introduction — why this matters now</h2>
+<p>Hedera is being used for production systems that deliver predictable fees and enterprise governance. In the latest community briefing multiple teams presented production stacks you can reproduce: SaucerSwap’s multi‑layer DEX (V1 AMM → V2 concentrated liquidity → announced V3 CLOB hybrid), Kia’s AI underwriting plus HTS‑tokenized invoices and a near‑mainnet H‑bridge, and sensor/IoT projects using HCS for ordered event logs. These projects reuse the same Hedera primitives in repeatable ways. If you’re building DeFi, tokenized credit, or an agent economy that needs cheap microtransactions and 3–5 second finality, the architectures discussed on the call are directly actionable.</p>
+<h2 id="tldr-actionable">TL;DR (Actionable)</h2>
+<ul>
+<li>SaucerSwap</li>
+<li>Layered execution model: V1 constant‑product AMM (2022) → V2 concentrated‑liquidity pools with range LPs and "Larry" rewards → announced V3 hybrid CLOB that falls back to V1/V2 liquidity.</li>
+<li>Platform smart‑contract fee = 0.3% per trade (≈0.25% to LPs, ≈0.05% to platform). V3 makers pay 0 on fill; takers pay 5–15 bps.</li>
+<li>Kia</li>
+<li>Two‑step underwriting: KiaFi AI (&lt;15s, 200+ signals) → human underwriter (48–72 hours).</li>
+<li>HTS tokenization of invoices; H‑bridge near mainnet; Flo spend card (phase 1 charge card; phase 2 borrow against on‑chain positions).</li>
+<li>Reported metrics: &gt;$3M tokenized invoices, 64 borrowers, 85 lenders, &gt;$30M shortlisted deal flow.</li>
+<li>Hedera primitives</li>
+<li>HTS for native token issuance; HCS for ordered event logs and settlement; Cryptocurrency Service (HBAR) for microtransactions; Hedera EVM for Solidity logic and EVM‑mirrored tokens.</li>
+<li>Example fee heuristic: stablecoin transfer via HTS ≈ $0.001 (validate with the live Fee Calculator).</li>
+<li>Practical next steps</li>
+<li>Map assets to HTS/HCS/Crypto, run SaucerSwap locally for integration testing, plan governance budget for regulated asset onboarding, design microtransaction rails on HBAR.</li>
+</ul>
+<h2 id="saucerswaps-multilayer-execution-model-specifics-engineers-need">SaucerSwap’s multi‑layer execution model — specifics engineers need</h2>
+<p>SaucerSwap runs three execution layers with distinct tradeoffs and a clear hybrid strategy for V3.</p>
+<ul>
+<li>V1 (2022): classic constant‑product AMM. LPs deposit equal amounts of two tokens; pool covers full price range. Always‑available liquidity; tolerant to extreme price moves and newly minted tokens.</li>
+<li>V2: concentrated liquidity (Uniswap v3 concept). LPs pick price ranges to concentrate capital for lower slippage, single‑sided exposure. Introduces programmatic incentives:</li>
+<li>"Larry" (Liquidity Aligned Rewards): two‑week epochs favoring concentrated LPs and market commitments.</li>
+<li>Bonzai/Bonzo vaults: automation primitives that detect out‑of‑range positions and reallocate capital automatically—useful for integrators and market makers.</li>
+<li>V3: hybrid CLOB + AMM model.</li>
+<li>Users "sign an intent" (bid/ask) with no fee at sign time; an intent is executed only when filled and can be cancelled without fee.</li>
+<li>Execution: match inside V3 CLOB; fall back to V1/V2 pools when orders can’t be satisfied.</li>
+<li>Fees: platform fee = 0.3% per trade (≈0.25% LPs, ≈0.05% treasury). Makers pay 0 on fill; takers pay 5–15 bps.</li>
+<li>Goal: provide order‑book behavior familiar to institutions while preserving on‑chain LP depth via AMM fallback.</li>
+</ul>
+<p>Engineers building integrations should simulate both matching and AMM fallback paths and test maker/taker fee flows.</p>
+<h2 id="kia-credit-the-tokenization-pipeline-underwriting-flow-and-spend-rails">Kia Credit — the tokenization pipeline, underwriting flow, and spend rails</h2>
+<p>Kia’s stack combines AI underwriting, human review, HTS tokenization, a Hedera‑native H‑bridge, and a Visa‑powered spend layer (Flo).</p>
+<p>Technical flow:
+1. Borrowers upload documents (bank statements, invoices, inventory, royalties, POs).
+2. KiaFi AI runs a first‑pass underwriting in &lt;15s using 200+ signals to produce an AI report.
+3. Human underwriter completes full assessment in 48–72 hours.
+4. After underwriting, invoices/receivables are tokenized on Hedera using HTS and become on‑chain collateral and reputation atoms.
+5. Tokenized assets enable standardized risk signals for cross‑border lenders.</p>
+<p>Reported metrics from the call:
+- &gt;$3M in tokenized invoices (fully funded)
+- 64 borrowers, 85 registered lenders
+- &gt;$30M shortlisted deal flow
+- DeFi Llama rank target: current 7th → goal 5th</p>
+<p>Infrastructure items for integration:
+- H‑bridge: Hedera‑only bridge focused on concentrating liquidity inside Hedera. Claimed cost reduction (call statement) vs. multi‑chain bridges; status: “one click away from mainnet” at time of call. Request addresses, timelines, and audit info before production use.
+- Flo: Visa‑powered spend layer. Phase 1 = charge card; Phase 2 = borrow against on‑chain positions while TVL remains on Hedera (i.e., spendability without moving collateral off‑chain).
+- HCS pilots: cited for cross‑border settlement pilots (Pakistan, Bangladesh) leveraging Hedera’s 3–5s finality.</p>
+<h2 id="hedera-primitives-fees-and-the-evm-gas-roadmap-what-to-build-for-now">Hedera primitives, fees, and the EVM gas roadmap — what to build for now</h2>
+<p>Map functionality to primitives:
+- HTS: token issuance and high‑volume token transfers. Use for native asset movements with predictable, low USD‑denominated fees.
+- HCS: verifiable event ordering and settlement logs.
+- Cryptocurrency Service (HBAR): ultra‑cheap microtransactions between agents; ideal for high‑frequency tiny payments.
+- Hedera EVM: Solidity logic and contract execution; HTS tokens can be mirrored into the EVM to behave like ERC‑20s.</p>
+<p>Fees and heuristics:
+- Official fee schedule is USD‑denominated and converted to HBAR at transaction time. Example from docs: stablecoin transfer via HTS ≈ $0.001—validate via the Fee Calculator.
+- Operational heuristics cited on the call: HBAR transfer ~0.01¢ and HTS transfer ~0.1¢ (use as rough guides only).</p>
+<p>EVM gas capacity:
+- Current referenced benchmark: ~150M gas (Hyperliquid).
+- Project Bonneville roadmap aims toward ~1B (giga) gas capacity.
+- If building SaucerSwap‑scale throughput or institutional order books, include Bonneville in capacity planning and simulate both current and projected gas limits.</p>
+<p>Interoperability and economics:
+- HTS tokens can be mirrored into EVM to avoid duplicating token state while enabling Solidity integrations.
+- X402 v2 work and a Hedera spec were cited as enabling interoperability with X402‑compatible apps.
+- HBAR staking matters for network economics (speakers referenced &gt;2% APY).</p>
+<h2 id="developer-playbook-and-operational-mechanics-how-to-reproduce-these-patterns">Developer playbook and operational mechanics — how to reproduce these patterns</h2>
+<p>Start with an asset flow diagram mapping each operation to a Hedera primitive. Example flow:
+1) Issue invoice token via HTS.
+2) Mirror token into Hedera EVM only when contract logic is required (vaults, lending markets).
+3) Record settlement events in HCS.
+4) Perform microtransaction signaling on HBAR.</p>
+<p>Practical steps:
+- Use Hedera’s Asset Tokenization Studio and HTS APIs for native issuance.
+- Mirror HTS tokens into the Hedera EVM when you need Solidity compatibility.
+- Run local dev instances (the call included a live local SaucerSwap demo). Deploy contracts to a testnet/mirror with HTS/EVM support.
+- Test vault automation (Bonzai vaults) under simulated price moves; build agents that call vault reallocation endpoints or sign intents for V3.
+- For high‑frequency tiny payments (vault fee adjustments, oracle pings, bot coordination), prefer HBAR rails as microtransaction channels due to lower absolute per‑transfer costs.</p>
+<p>Governance and onboarding:
+- SAUCE governance allocates treasury and reward programs; community votes can affect spend.
+- For regulated asset listings, allocate treasury and legal budgets for third‑party onboarding providers (Swarm example) and compliance checks.
+- Include exchange and stablecoin rails (e.g., USDC on Hedera) in liquidity design and verify expected exchange integrations with counterparties.</p>
+<h2 id="known-gaps-and-things-the-call-did-not-provide">Known gaps and things the call did not provide</h2>
+<p>Before routing significant user funds or onboarding regulated assets, request:
+- Contract addresses, HTS token IDs, and vault API endpoints.
+- Formal release dates for SaucerSwap V3 and a public mainnet schedule for H‑bridge.
+- Audit reports and independent security attestations.</p>
+<p>Treat the above as blockers for production rollout until confirmed.</p>
+<h2 id="key-takeaways-practical">Key Takeaways (practical)</h2>
+<ul>
+<li>HTS + EVM mirror is the repeatable pattern: issue native tokens with HTS, mirror to Hedera EVM when Solidity flows are required. Retains HTS transfer cost and 3–5s finality while enabling DeFi composability.</li>
+<li>SaucerSwap V3 couples intent‑signing CLOB behavior with AMM fallback. Simulate order‑book matching and AMM fills; factor maker/taker spreads (maker=0, taker=5–15 bps).</li>
+<li>For microtransactions and agent economies, plan HBAR rails and test using Hedera’s Fee Calculator; use HTS for higher‑value asset movements.</li>
+<li>Governance funding matters: plan treasury allocations for onboarding (third‑party fees, compliance) and expect community voting.</li>
+<li>Validate performance assumptions against Project Bonneville timelines: model current (~150M gas) and future (~1B gas) scenarios.</li>
+</ul>
+<h2 id="resources-select-links-from-official-docs">Resources (select links from official docs)</h2>
+<ul>
+<li>Hedera Token Service (HTS): https://hedera.com/learning/service/token-service/</li>
+<li>Hedera Consensus Service (HCS): https://hedera.com/learning/consensus/services-products/</li>
+<li>Hedera Smart Contract Service / EVM: https://hedera.com/learning/service/smart-contract-service/</li>
+<li>Hedera developer docs &amp; core concepts: https://docs.hedera.com/hedera/core-concepts</li>
+<li>Hedera learning hub &amp; blog: https://hedera.com/learning and https://hedera.com/blog/</li>
+</ul>
+<h2 id="closing-concrete-next-steps-and-invitation">Closing — concrete next steps and invitation</h2>
+<p>If you’re building on Hedera, do these three things this week:
+1. Map your assets to HTS/HCS/Cryptocurrency Service and draft a fee model using Hedera’s Fee Calculator (use $0.001 per HTS transfer as a starting anchor from docs, and validate current values).
+2. Stand up a local SaucerSwap dev instance or testnet mirror and run integration tests for concentrated liquidity and intent signing; wire a Bonzai vault simulation to exercise automated reallocation.
+3. Open governance tickets early if you’ll require treasury funds for third‑party onboarding (Swarm example) and start collecting legal/AML requirements for any regulated assets.</p>
+<p>Want a follow‑up I can deliver next?
+- A developer appendix mapping exact Hedera SDK calls (HTS create/mint/transfer; HCS submit/message; Hedera EVM deploy/call) to the SaucerSwap and Kia patterns, with code samples in JavaScript/TypeScript, Java, or Go.
+- A checklist for production readiness: required audits, token IDs, contract addresses, governance proposals, and compliance steps for listing regulated assets.</p>
+<p>Tell me which follow‑up you want (developer appendix or SDK cookbook) and which SDK language you prefer. Also plan to join Hedera Con Miami on May 4 (free sign‑up) and tune into the technical community session with Seal Coin CTO Jeremy Pencia on April 29 for deeper IoT and quantum‑resistance discussions.</p>
+  <div class="tags">
+    <span class="tag">hedera</span>
+    <span class="tag">hts</span>
+    <span class="tag">hcs</span>
+    <span class="tag">evm</span>
+    <span class="tag">smart-contracts</span>
+  </div>
+  
+  <div class="article-footer">
+    <p>Generated by <a href="https://github.com/jmgomezl/HederaContentCreatorHelper">HederaContentCreatorHelper</a>
+    &mdash; Multi-agent CrewAI pipeline</p>
+  </div>
+</div>
+</body>
+</html>
